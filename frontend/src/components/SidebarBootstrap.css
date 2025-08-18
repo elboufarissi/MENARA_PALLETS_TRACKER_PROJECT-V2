@@ -1,0 +1,131 @@
+/* === Importation des polices Dax === */
+/*
+@font-face {
+  font-family: "Dax";
+  src: url("../assets/fonts/Dax-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Dax";
+  src: url("../assets/fonts/Dax-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+*/
+
+/* === Styles generaux === */
+body {
+  font-family: "Dax", sans-serif;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.hover-effect {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.hover-effect:hover {
+  transform: scale(1.2);
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.sidebar {
+  z-index: 1000;
+  width: 60px;
+  height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 1rem;
+  position: relative;
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+}
+
+.sidebar-bootstrap {
+  background: #fff;
+  border-left: 1px solid #e0e0e0;
+  height: 100%;
+  width: 44px;
+  min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center icons vertically in the sidebar */
+  padding-top: 8px;
+  padding-bottom: 8px;
+  justify-content: flex-start;
+  gap: 2px;
+  /* Remove floating/positioning for independent right-side panel */
+  position: static;
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.sidebar-floating {
+  /* Remove all floating/positioning styles */
+  box-shadow: none;
+  border-radius: 0;
+  margin: 0;
+  position: static;
+  top: auto;
+  left: auto;
+  z-index: auto;
+}
+
+/* Ensure the sidebar stays at the right of the form in the flex container */
+.parent-flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+}
+
+.form-content-area {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-icon {
+  color: #7a8a99;
+  font-size: 1.15rem;
+  margin: 6px 0 6px 6px;
+  transition: color 0.2s;
+  cursor: pointer;
+  display: block;
+}
+
+.sidebar-icon:last-child {
+  margin-bottom: 0;
+}
+
+.sidebar-icon:hover {
+  color: #1976d2;
+}
+
+@media (max-width: 576px) {
+  .sidebar {
+    flex-direction: row !important;
+    width: 100%;
+    height: 50px;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    justify-content: space-around;
+    border-top: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+  }
+}
+
+.blue-icons svg {
+  color: #566273;
+}

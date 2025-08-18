@@ -1,0 +1,23 @@
+/* Font definitions */
+@font-face {
+  font-family: "Dax-Medium";
+  src: local("Arial"); /* Fallback to system font */
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Dax-Light";
+  src: local("Arial"); /* Fallback to system font */
+  font-weight: 300;
+  font-style: normal;
+}
+
+/* Font classes */
+.dax-medium {
+  font-family: "Dax-Medium", Arial, sans-serif;
+}
+
+.dax-light {
+  font-family: "Dax-Light", Arial, sans-serif;
+}

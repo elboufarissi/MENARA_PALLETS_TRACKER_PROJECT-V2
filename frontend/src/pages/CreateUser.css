@@ -1,0 +1,92 @@
+/* CreateUser.css */
+.create-user-page {
+  background: #f4f6f8;
+  min-height: calc(100vh - 48px);
+  padding: 20px;
+  margin-top: 48px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.page-header h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.page-header p {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.form-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.form-header {
+  background: #3498db;
+  color: white;
+  padding: 15px 20px;
+  border-bottom: 1px solid #2980b9;
+}
+
+.form-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.users-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.users-header {
+  background: #2c3e50;
+  color: white;
+  padding: 15px 20px;
+  border-bottom: 1px solid #34495e;
+}
+
+.users-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+@media (min-width: 992px) {
+  .content-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .form-section {
+    flex: 0 0 450px;
+  }
+
+  .users-section {
+    flex: 1;
+  }
+}
