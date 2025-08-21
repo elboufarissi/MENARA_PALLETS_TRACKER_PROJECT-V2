@@ -69,16 +69,7 @@ const NavigationMenu = () => {
               {getCurrentSection()}
             </span>
           </div>
-          <Dropdown align="end">
-            <Dropdown.Toggle variant="light" id="dropdown-basic" size="sm">
-              Défaut
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item href="#/action-1">Option 1</Dropdown.Item>
-              <Dropdown.Item href="#/action-2">Option 2</Dropdown.Item>
-              <Dropdown.Item href="#/action-3">Option 3</Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
+          
         </div>
       </div>
       {/* Palettes-Track Dropdown Menu */}
@@ -158,7 +149,7 @@ const NavigationMenu = () => {
                       {["ADMIN", "CAISSIER", "CAISSIERE"].includes(role) && (
                         <Link
                           to="/recuperation"
-                          className="sage-submenu-link active"
+                          className="sage-submenu-link"
                         >
                           Récupération de Caution
                         </Link>

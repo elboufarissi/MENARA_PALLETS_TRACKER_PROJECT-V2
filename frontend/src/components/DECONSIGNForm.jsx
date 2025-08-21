@@ -244,8 +244,15 @@ useEffect(() => {
   const code = String(watchedClient || "").trim().toUpperCase();
   const c = clientsByCode[code];
   const auto = c ? (c.raison_sociale || c.client_name || c.raison || "") : "";
-  setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
-}, [clientsByCode, watchedClient, setValue]);
+
+  // Only write when we actually have a non-empty auto value
+  if (auto) {
+    const current = (getValues("xraison_0") || "").trim();
+    if (current !== auto) {
+      setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
+    }
+  }
+}, [clientsByCode, watchedClient, setValue, getValues]);
 
     useEffect(() => {
       if (initialData) {
@@ -304,6 +311,17 @@ useEffect(() => {
         );
       }
     }, [initialData, reset]);
+
+    useEffect(() => {
+  if (!initialData) return;
+  const pre =
+    initialData.xraison_0 ||
+    initialData.customer?.raison_sociale ||
+    "";
+  if (pre) {
+    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
+  }
+}, [initialData, setValue]);
 
     // Separate useEffect to handle form reset after dropdown data is loaded
     useEffect(() => {

@@ -148,6 +148,7 @@ const DepotCautionForm = forwardRef(
     const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
     const [cinHasBeenTouched, setCinHasBeenTouched] = useState(false);
     const [montantHasBeenTouched, setMontantHasBeenTouched] = useState(false);
+    const clientsReady = !isLoadingDropdowns && clients.length > 0;
 
     useEffect(() => {
       if (initialData) {
@@ -256,6 +257,13 @@ const clientsByCode = useMemo(
     ),
   [clients]
 );
+useEffect(() => {
+  if (!initialData) return;
+  const pre = initialData.xraison_0 || "";
+  if (pre) {
+    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
+  }
+}, [initialData, setValue]);
 
 // Watch the typed client code
 const watchedClientCode = watch("xclient_0");
@@ -265,29 +273,49 @@ useEffect(() => {
   const code = String(watchedClientCode || "").trim().toUpperCase();
   const client = clientsByCode[code];
 
-  // Auto-fill raison sociale in the form state (visible read-only input will read this value)
+  // keep raison in sync (guarded)
   const autoRaison = client ? (client.raison_sociale || client.client_name || "") : "";
-  setValue("xraison_0", autoRaison, { shouldValidate: false, shouldDirty: true });
+  if (autoRaison) {
+    const current = (getValues("xraison_0") || "").trim();
+    if (current !== autoRaison) {
+      setValue("xraison_0", autoRaison, { shouldValidate: false, shouldDirty: true });
+    }
+  }
 
-  // Field-level validation feedback as user types
+  // 🔒 Only show “introuvable” once clients are loaded
   if (code === "") {
-    clearErrors("xclient_0"); // let Yup handle "required" on submit
+    clearErrors("xclient_0");
   } else if (!client) {
-    setError("xclient_0", { type: "manual", message: "Client introuvable" });
+    if (clientsReady) {
+      setError("xclient_0", { type: "manual", message: "Client introuvable" });
+    } else {
+      clearErrors("xclient_0"); // suppress flicker while loading
+    }
   } else {
     clearErrors("xclient_0");
   }
 
-  // Optional: always refresh CIN from backend if we have a valid client
+  // CIN hydration (unchanged)
   if (client) {
     api
       .get(`/xcaution/cin-by-client/${code}`)
-      .then((res) => setValue("xcin_0", (res.data?.xcin_0 || "").toUpperCase(), { shouldValidate: true }))
+      .then((res) => setValue("xcin_0", (res.data?.xcin_0 || "").toUpperCase(), { shouldValidate: false }))
       .catch(() => setValue("xcin_0", "", { shouldValidate: true }));
-  } else {
-    setValue("xcin_0", "", { shouldValidate: true });
+  } else if (clientsReady) {
+    // only clear when we definitively know it's not a client
+    setValue("xcin_0", "", { shouldValidate: false });
   }
-}, [watchedClientCode, clientsByCode, setValue, setError, clearErrors]);
+}, [
+  watchedClientCode,
+  clientsByCode,
+  setValue,
+  setError,
+  clearErrors,
+  getValues,
+  clientsReady,     // 👈 add this dep
+]);
+
+
 
     // Fetch dropdown data for sites and clients
     useEffect(() => {

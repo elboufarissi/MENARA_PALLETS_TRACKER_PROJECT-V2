@@ -44,12 +44,12 @@ class Restitution extends Model
     // ---------------- Relations ----------------
     public function facility()
     {
-        return $this->belongsTo(Facility::class, 'xsite_0', 'fcy_0');
+        return $this->belongsTo(Facility::class, 'xsite_0', 'FCY_0');
     }
 
     public function customer()
     {
-        return $this->belongsTo(BpCustomer::class, 'xclient_0', 'bpcnum_0');
+        return $this->belongsTo(BpCustomer::class, 'xclient_0', 'BPCNUM_0');
     }
     public function caution()
     {

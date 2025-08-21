@@ -198,10 +198,16 @@ const watchedClientCode = watch("xclient_0");
 useEffect(() => {
   const code = String(watchedClientCode || "").trim().toUpperCase();
   const c = clientsByCode[code];
-  const auto =
-    c ? (c.raison_sociale || c.client_name || "") : "";
-  setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
-}, [watchedClientCode, clientsByCode, setValue]);
+  const auto = c ? (c.raison_sociale || c.client_name || "") : "";
+
+  if (auto) {
+    const current = getValues("xraison_0") || "";
+    if (current !== auto) {
+      setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
+    }
+  }
+}, [watchedClientCode, clientsByCode, setValue, getValues]);
+
 
     // Process deliveries for dropdown
     const deliveryOptions = useMemo(() => {
@@ -255,7 +261,7 @@ useEffect(() => {
           xnum_0: initialData.xnum_0 || "",
           xsite_0: initialData.xsite_0 || "",
           xclient_0: initialData.xclient_0 || "",
-          xraison_0: initialData.xraison_0 || "",
+          xraison_0: initialData.xraison_0 || initialData.customer?.raison_sociale || "",
           xbp_0: initialData.xbp_0 || "",
           xcamion_0: initialData.xcamion_0 || "",
           xvalsta_0: initialData.xvalsta_0?.toString() || "2",
@@ -310,7 +316,34 @@ useEffect(() => {
           })
         );
       }
-    }, [initialData, reset, sites, clients]); // Add sites and clients as dependencies
+    }, [initialData, reset]); // Add sites and clients as dependencies
+
+    useEffect(() => {
+  if (
+    initialData &&
+    !isLoadingDropdowns &&
+    (sites?.length ?? 0) > 0 &&
+    (clients?.length ?? 0) > 0
+  ) {
+    // Re-apply values so AutocompleteInput sees proper options
+    reset({
+      xnum_0: initialData.xnum_0 || "",
+      xsite_0: initialData.xsite_0 || "",
+      xclient_0: initialData.xclient_0 || "",
+      xraison_0:
+        getValues("xraison_0") ||
+        initialData.xraison_0 ||
+        initialData.customer?.raison_sociale ||
+        "",
+      xbp_0: initialData.xbp_0 || "",
+      xcamion_0: initialData.xcamion_0 || "",
+      xvalsta_0: initialData.xvalsta_0?.toString() || "2",
+      palette_ramene: getValues("palette_ramene") || "",
+      palette_a_consigner: getValues("palette_a_consigner") || "",
+      palette_consignees: getValues("palette_consignees") || "",
+    });
+  }
+}, [initialData, isLoadingDropdowns, sites, clients, reset, getValues]);
 
     // Fetch dropdown data for sites and clients
     useEffect(() => {
@@ -702,7 +735,7 @@ useEffect(() => {
 
           const detailedMessage = `⚠️Le nombre de palette à consigner dépasse votre solde actuel 
 
-� Situation du solde:
+  Situation du solde:
 • Solde actuel: ${currentBalance} DH
 • Montant requis: ${requiredAmount} DH
 • Montant manquant: ${missingAmount} DH
