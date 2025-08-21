@@ -1,0 +1,721 @@
+﻿/* Form styles */
+.form-wrapper {
+  max-width: 100%;
+  margin: 0;
+  padding: 0.2rem 0.2rem 0.2rem 0.2rem;
+  background: #f9fbfc;
+  border-radius: 4px;
+  border: 1px solid #d6d6d6;
+  box-shadow: 0 2px 6px #f0f0f0;
+}
+
+.caution-form .card {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  font-size: 0.88rem;
+}
+
+.caution-form .card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0.5rem 1rem 0.5rem 1rem;
+}
+
+.caution-form .card-header h5 {
+  font-size: 1.05rem;
+  margin: 0;
+  font-weight: bold;
+  color: #222;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 0.7rem;
+  padding: 0.7rem;
+}
+
+.form-row-custom {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.form-row-custom label {
+  width: 95px;
+  font-weight: 500;
+  margin-right: 6px;
+  text-align: right;
+  font-size: 0.93rem;
+  color: #222;
+}
+
+.form-row-custom .form-control,
+.form-row-custom .form-select {
+  flex: 1;
+  font-size: 0.93rem;
+  padding: 0.18rem 0.4rem;
+  height: 1.7rem;
+  border: 1px solid #bfc9d1;
+  border-radius: 3px;
+  background: #f8f9fa;
+}
+
+.form-row-custom .form-control:disabled {
+  background: #f4f6f8;
+  color: #000;
+  opacity: 1;
+}
+
+/* Default disabled field styles - black text for view mode */
+form input:disabled,
+form select:disabled {
+  color: #000 !important;
+  opacity: 1 !important;
+}
+
+/* Edit mode specific: non-editable fields should have gray text */
+.sage-form.edit-mode input:disabled,
+.sage-form.edit-mode select:disabled {
+  color: #888 !important;
+  opacity: 0.8 !important;
+}
+
+.sage-form.edit-mode .sage-input:disabled {
+  color: #888 !important;
+  opacity: 0.8 !important;
+}
+
+.sage-form.edit-mode .sage-fields select:disabled {
+  color: #888 !important;
+  opacity: 0.8 !important;
+}
+
+/* Edit mode: non-editable field icons should also be grayed out */
+.sage-form.edit-mode .sage-input:disabled + .sage-input-icon {
+  color: #bbb !important;
+  opacity: 0.6 !important;
+}
+
+.form-horizontal .form-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+
+.form-horizontal .form-label {
+  width: 150px;
+  margin-right: 0.7rem;
+  font-weight: 500;
+}
+
+.form-horizontal .form-control {
+  flex: 1;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.my-custom-btn {
+  background-color: #f6f6f6 !important;
+  border-color: #bfc9d1 !important;
+  color: #2d3e50 !important;
+  padding: 0.22rem 0.7rem !important;
+  font-size: 0.93rem !important;
+  border-radius: 3px !important;
+  font-weight: 600 !important;
+}
+
+hr.w-100.my-4 {
+  margin: 0.7rem 0 !important;
+  border-top: 1px solid #d6d6d6;
+}
+
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.is-invalid {
+  border-color: #dc3545;
+}
+
+.invalid-feedback {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
+}
+
+.bg-light {
+  background-color: #f4f6f8 !important;
+}
+
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    padding: 0.7rem;
+  }
+}
+
+/* === Importation des polices Dax === */
+/*
+@font-face {
+  font-family: 'Dax';
+  src: url('../assets/fonts/Dax-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Dax';
+  src: url('../assets/fonts/Dax-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+*/
+
+/* === Styles generaux === */
+body,
+.form-wrapper {
+  /* font-family: 'Dax', sans-serif; */
+  background-color: #f8f9fa;
+  padding: 4px;
+}
+
+/* Titre */
+h5 {
+  /* font-family: 'Dax'; */
+  font-weight: 500;
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Sous-titres */
+h6 {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #2d3e50;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.18rem;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f4f6f8;
+  padding-left: 0.2rem;
+}
+
+/* Champs du formulaire */
+.form-row-custom {
+  margin-bottom: 0.7rem;
+}
+
+/* Erreurs */
+.text-danger {
+  font-size: 0.85rem;
+  margin-top: 0.12rem;
+  font-weight: 300;
+}
+
+/* Sage form styles */
+.sage-form {
+  width: 100%;
+  background: #f9fbfc;
+  border-radius: 4px;
+  border: 1px solid #d6d6d6;
+  box-shadow: 0 2px 6px #f0f0f0;
+  padding: 0;
+  font-size: 0.92rem;
+}
+
+.sage-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0.5rem 1rem 0.5rem 1rem;
+}
+
+.sage-form-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.sage-nav-arrow {
+  font-size: 1.1rem;
+  color: #bfc9d1;
+  margin-right: 2px;
+  cursor: pointer;
+}
+
+.sage-form-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #222;
+  margin-left: 6px;
+  letter-spacing: 0.1px;
+}
+
+.sage-validation-btn {
+  background: #f4f6f8;
+  border: 1px solid #bfc9d1;
+  border-radius: 3px;
+  color: #bfc9d1;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.08rem 0.65rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-left: 8px;
+  height: 1.7rem;
+  line-height: 1.1;
+  min-width: 70px;
+}
+.sage-validation-btn:hover {
+  background: #e0e0e0;
+}
+
+.sage-section {
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #d6d6d6;
+  margin: 18px 12px 0 12px;
+  padding-bottom: 0.5rem;
+  box-shadow: 0 1px 2px #f0f0f0;
+}
+
+.sage-section-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #2d3e50;
+  padding: 0.6rem 0.7rem 0.3rem 0.7rem;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f4f6f8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sage-section-icon {
+  font-size: 1.1rem;
+  color: #bfc9d1;
+}
+
+.sage-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.7rem 0.2rem 0.7rem;
+}
+
+.sage-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.18rem;
+  gap: 0.5rem;
+}
+
+.sage-row label {
+  width: 110px;
+  font-weight: 500;
+  text-align: right;
+  font-size: 0.93rem;
+  color: #222;
+  margin-right: 8px;
+}
+
+.sage-input,
+.sage-fields input[type="text"],
+.sage-fields select {
+  flex: 1;
+  font-size: 0.93rem;
+  padding: 0.18rem 0.4rem;
+  height: 1.7rem;
+  border: none;
+  border-bottom: 1.5px solid #bfc9d1;
+  border-radius: 2px;
+  background: #f8f9fa;
+  outline: none;
+  transition: border 0.15s;
+}
+
+.sage-input:disabled {
+  background: #f4f6f8;
+  color: #000;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.sage-input:disabled + .sage-input-icon {
+  color: #ccc;
+  opacity: 0.5;
+}
+
+.sage-fields select:disabled {
+  background: #f4f6f8 !important;
+  color: #000 !important;
+  cursor: not-allowed !important;
+  opacity: 1;
+}
+
+/* Edit mode overrides: non-editable sage fields should have gray text */
+.sage-form.edit-mode .sage-input:disabled {
+  color: #888 !important;
+  opacity: 0.8 !important;
+}
+
+.sage-form.edit-mode .sage-fields select:disabled {
+  color: #888 !important;
+  opacity: 0.8 !important;
+}
+
+/* Edit mode: non-editable field icons should also be grayed out */
+.sage-form.edit-mode .sage-input:disabled + .sage-input-icon {
+  color: #bbb !important;
+  opacity: 0.6 !important;
+}
+
+/* Highlight editable fields in edit mode */
+.sage-input.editable-field {
+  border-bottom-color: #4caf50 !important;
+  background: #f8fff8 !important;
+}
+
+.sage-input.editable-field:focus {
+  border-bottom-color: #2e7d32 !important;
+  background: #f0fff0 !important;
+}
+
+.sage-input-icon-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.sage-input-icon {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #bfc9d1;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.sage-required {
+  color: #e53935;
+  margin-left: 2px;
+}
+
+.sage-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-left: 8px;
+  margin-top: 2px;
+  font-weight: 300;
+  display: block;
+}
+
+/* Error styling for input fields */
+.sage-input-error {
+  border: 1px solid rgba(220, 53, 69, 0.6) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.15) !important;
+  background-color: rgba(220, 53, 69, 0.05) !important;
+}
+
+.sage-input-error:focus {
+  border: 1px solid rgba(220, 53, 69, 0.8) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2) !important;
+  background-color: rgba(220, 53, 69, 0.08) !important;
+}
+
+/* Tooltip styles for error fields */
+.sage-tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.sage-tooltip {
+  position: absolute;
+  bottom: -45px;
+  left: 0;
+  background-color: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sage-tooltip:before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 20px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #333;
+}
+
+.sage-tooltip-wrapper:hover .sage-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Tooltip styles for error fields */
+.sage-tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.sage-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background-color: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sage-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+}
+
+.sage-tooltip-wrapper:hover .sage-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Removed sage-breadcrumb-bar-form styles */
+
+/* Searchable Dropdown Styles */
+.searchable-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d6d6d6;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item-code {
+  font-weight: 600;
+  color: #333;
+  min-width: 80px;
+  text-align: left;
+}
+
+.dropdown-item-name {
+  color: #666;
+  font-size: 0.9em;
+  flex: 1;
+  margin-left: 10px;
+  text-align: left;
+}
+
+.dropdown-item.no-results {
+  color: #999;
+  font-style: italic;
+  cursor: default;
+  justify-content: center;
+  font-size: 0.8rem;
+  padding: 6px 8px;
+}
+
+.dropdown-item.no-results:hover {
+  background-color: transparent;
+}
+
+.dropdown-icon {
+  transition: transform 0.2s ease;
+}
+
+.sage-input-icon-wrap:hover .dropdown-icon {
+  transform: rotate(180deg);
+}
+
+/* Loading state */
+.sage-form.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background: #f9fbfc;
+  border-radius: 4px;
+  border: 1px solid #d6d6d6;
+}
+
+.loading-message {
+  font-size: 1.1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Enhanced focus states for dropdowns */
+.searchable-dropdown .sage-input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.searchable-dropdown .sage-input.error {
+  border-color: #f44336;
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2);
+}
+
+/* Client autocomplete dropdown styles */
+.client-autocomplete-container {
+  position: relative;
+  flex: 1;
+}
+
+.client-autocomplete-container input {
+  flex: 1;
+  font-size: 0.93rem;
+  padding: 0.18rem 0.4rem;
+  height: 1.7rem;
+  border: none;
+  border-bottom: 1.5px solid #bfc9d1;
+  border-radius: 2px;
+  background: #f8f9fa;
+  outline: none;
+  transition: border 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.client-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 0 0 4px 4px;
+}
+
+.client-autocomplete-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: white;
+  font-size: 0.9rem;
+  transition: background-color 0.15s ease;
+  user-select: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.client-autocomplete-option:last-child {
+  border-bottom: none;
+}
+
+.client-autocomplete-option:hover,
+.client-autocomplete-option.selected {
+  background-color: #f8f9fa !important;
+  color: #495057;
+}
+
+.client-autocomplete-option:active {
+  background-color: #e9ecef !important;
+}
+
+/* Hide default autocomplete on the client input */
+.sage-input[type="text"]::-webkit-outer-spin-button,
+.sage-input[type="text"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Ensure dropdown appears above other elements */
+.client-autocomplete-dropdown {
+  border-color: #ccc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading state for dropdown */
+.client-autocomplete-loading {
+  padding: 10px 12px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* No results state */
+.client-autocomplete-no-results {
+  padding: 6px 8px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.8rem;
+}

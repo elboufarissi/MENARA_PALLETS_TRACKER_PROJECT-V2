@@ -1,0 +1,54 @@
+:root{
+  --loader-size:72px;
+  --loader-thickness:6px;
+  --loader-color:#1a2c50;
+  --loader-muted:#e6e9ef;
+}
+
+/* Full-page overlay */
+.loader-overlay{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  gap: .75rem;
+  background: #fff;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity .25s ease;
+}
+.loader-overlay.is-done{
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Spinner */
+.loader{
+  width: var(--loader-size);
+  height: var(--loader-size);
+  border-radius: 50%;
+  border: var(--loader-thickness) solid var(--loader-muted);
+  border-top-color: var(--loader-color);
+  animation: spin .8s linear infinite;
+}
+.loader-text{
+  margin-top: .5rem;
+  font: 500 14px/1.2 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  letter-spacing: .06em;
+  color: var(--loader-color);
+}
+/* loader.css additions */
+.loader-meta {
+  display: grid;
+  gap: 4px;
+  place-items: center;
+}
+
+.loader-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

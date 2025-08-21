@@ -1,0 +1,249 @@
+/* UserTable.css */
+.user-table-container {
+  padding: 20px;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 0.9rem;
+  min-width: 700px; /* Minimum width to prevent excessive compression */
+}
+
+.user-table th:nth-child(1) {
+  /* Nom complet */
+  width: 22%;
+}
+
+.user-table th:nth-child(2) {
+  /* Nom d'utilisateur */
+  width: 18%;
+}
+
+.user-table th:nth-child(3) {
+  /* Rôle */
+  width: 28%;
+  min-width: 180px; /* Ensure enough space for long role names */
+}
+
+.user-table th:nth-child(4) {
+  /* Date de création */
+  width: 20%;
+}
+
+.user-table th:nth-child(5) {
+  /* Actions */
+  width: 12%;
+  min-width: 80px; /* Ensure actions column is always visible */
+}
+
+.user-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.user-table th {
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 1px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.user-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.user-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.user-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.username {
+  font-family: "Courier New", monospace;
+  color: #5a6268;
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.role {
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.role-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap; /* Ensure badge text doesn't wrap */
+  display: inline-block;
+}
+
+.role-badge.admin {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.role-badge.caissiere,
+.role-badge.caissier {
+  background-color: #3498db;
+  color: white;
+}
+
+.role-badge.agent_ordonnancement {
+  background-color: #f39c12;
+  color: white;
+}
+
+.role-badge.chef_parc {
+  background-color: #27ae60;
+  color: white;
+}
+
+.date {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.btn-action {
+  background: none;
+  border: none;
+  padding: 8px;
+  margin: 0 3px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-edit {
+  color: #3498db;
+}
+
+.btn-edit:hover {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-delete {
+  color: #e74c3c;
+}
+
+.btn-delete:hover {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+.no-data p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .user-table {
+    font-size: 0.8rem;
+  }
+
+  .user-table th,
+  .user-table td {
+    padding: 8px 10px;
+  }
+
+  .role-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    white-space: nowrap; /* Maintain no wrapping on smaller screens */
+  }
+
+  .btn-action {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 576px) {
+  .user-table-container {
+    padding: 10px;
+  }
+
+  /* Stack table content on very small screens */
+  .user-table,
+  .user-table thead,
+  .user-table tbody,
+  .user-table th,
+  .user-table td,
+  .user-table tr {
+    display: block;
+  }
+
+  .user-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .user-table tr {
+    border: 1px solid #dee2e6;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: white;
+  }
+
+  .user-table td {
+    border: none;
+    border-bottom: 1px solid #dee2e6;
+    position: relative;
+    padding-left: 50%;
+    text-align: right;
+  }
+
+  .user-table td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: #495057;
+    text-align: left;
+  }
+
+  .actions {
+    text-align: center;
+  }
+}

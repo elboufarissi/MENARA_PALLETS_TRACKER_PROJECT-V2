@@ -1,0 +1,91 @@
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  border: none;
+  /* Remove any scroll offset or whitespace */
+  position: static;
+  top: 0;
+  left: 0;
+}
+
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100%;
+  width: 100%;
+  position: static;
+  top: 0;
+  left: 0;
+}
+
+.caution-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 2px solid #e0e0e0;
+  height: 48px;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 15px;
+  z-index: 100;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Add a utility class for page content to avoid being hidden under the fixed header */
+.caution-header-spacer {
+  height: 48px;
+  width: 100%;
+  display: block;
+}
+
+/* Removed margin-top from these containers to eliminate spacing */
+
+.caution-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.caution-logo {
+  color: #222;
+  font-weight: bold;
+  font-size: 1.5rem;
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin-right: 6px;
+  letter-spacing: 0.5px;
+}
+.caution-header-icon {
+  color: #888;
+  font-size: 1.1rem;
+  margin: 0 8px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.caution-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.caution-header-user {
+  color: #333;
+  font-size: 1rem;
+  margin: 0 6px;
+}
+
+.breadcrumb,
+.caution-header .breadcrumb,
+.caution-header .breadcrumb-item,
+.caution-header .breadcrumb-item a {
+  font-size: 0.92rem !important;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
+}
