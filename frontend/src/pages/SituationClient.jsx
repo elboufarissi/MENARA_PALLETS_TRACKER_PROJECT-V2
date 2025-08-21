@@ -29,6 +29,9 @@ export default function SituationClient() {
   const [showDetails, setShowDetails] = useState(false);
   const [error, setError] = useState(null);
 
+  const [isClientValid, setIsClientValid] = useState(true);
+  const [clientTouched, setClientTouched] = useState(false);
+
   // Memoize options to prevent infinite re-renders
   const clientOptionsFormatted = useMemo(() => {
     return clientOptions.map((c) => ({
@@ -37,6 +40,16 @@ export default function SituationClient() {
       name: c.client_name || "",
     }));
   }, [clientOptions]);
+   // Fast lookup: CLIENT_CODE (uppercased) -> { id, code, name }
+const clientsByCode = useMemo(() => {
+  const map = {};
+  for (const c of clientOptions) {
+    const code = String(c.client_code || "").trim().toUpperCase();
+    const name = c.client_name || c.raison_sociale || "";
+    if (code) map[code] = { code, name };
+  }
+  return map;
+}, [clientOptions]);
 
   const siteOptionsFormatted = useMemo(() => {
     return siteOptions.map((s) => ({
@@ -69,38 +82,48 @@ export default function SituationClient() {
   }, []);
 
   const handleFetchSituation = async () => {
-    if (!client || !site) {
-      alert("Veuillez remplir les champs Client et Site.");
-      return;
-    }
+  if (!client || !site) {
+    alert("Veuillez remplir les champs Client et Site.");
+    return;
+  }
+  if (!isClientKnown) {
+    setClientTouched(true);
+    setIsClientValid(false);
+    alert("Client introuvable. Veuillez saisir un code client valide.");
+    return;
+  }
+  try {
+    const response = await api.get("/flux-interne/situation-client", {
+      params: { client: client.trim().toUpperCase(), site },
+    });
+    const data = response.data;
+    if (data.raison) setRaison(data.raison);
+    setResultat({
+      cautionPalettes: data.cautionPalettes || 0,
+      palettesConsignees: data.palettesConsignees || 0,
+      cautionDh: data.cautionDh || 0,
+      palettesDeconsignees: data.palettesDeconsignees || 0,
+      sumrestitutions: data.sumrestitutions || 0,
+      soldePalettes: Math.floor(data.soldePalettes || 0),
+      soldeDh: data.soldeDh || 0,
+    });
+    setOperations(data.operations || []);
+    setShowDetails(true);
+    setError(null);
+  } catch (err) {
+    setError(
+      `Erreur lors de la récupération de la situation client: ${
+        err.response?.data?.message || err.message
+      }`
+    );
+  }
+};
 
-    try {
-      const response = await api.get("/flux-interne/situation-client", {
-        params: { client, site },
-      });
+  const isClientKnown = useMemo(() => {
+  const code = (client || "").trim().toUpperCase();
+  return !!clientsByCode[code];
+}, [client, clientsByCode]);
 
-      const data = response.data;
-      if (data.raison) setRaison(data.raison);
-      setResultat({
-        cautionPalettes: data.cautionPalettes || 0,
-        palettesConsignees: data.palettesConsignees || 0,
-        cautionDh: data.cautionDh || 0,
-        palettesDeconsignees: data.palettesDeconsignees || 0,
-        sumrestitutions: data.sumrestitutions || 0,
-        soldePalettes: Math.floor(data.soldePalettes || 0),
-        soldeDh: data.soldeDh || 0,
-      });
-      setOperations(data.operations || []);
-      setShowDetails(true);
-      setError(null);
-    } catch (err) {
-      setError(
-        `Erreur lors de la récupération de la situation client: ${
-          err.response?.data?.message || err.message
-        }`
-      );
-    }
-  };
 
   return (
     <>
@@ -112,23 +135,33 @@ export default function SituationClient() {
           <div className="card">
             <h3>Critères</h3>
             <div className="form-row">
-              <label>
-                Client <span className="required">*</span>
-              </label>
-              <div className="input-wrapper">
-                <AutocompleteInput
-                  value={client}
-                  onChange={(e) => setClient(e.target.value)}
-                  onSelect={(option) => {
-                    setClient(option.code);
-                    setRaison(option.name);
-                  }}
-                  options={clientOptionsFormatted}
-                  displayKeys={["code", "name"]}
-                  primaryKey="code"
-                />
-              </div>
-            </div>
+  <label>
+    Client <span className="required">*</span>
+  </label>
+  <div className="input-wrapper">
+    <input
+      value={client}
+      onChange={(e) => {
+        const value = (e?.target?.value ?? "").toString().toUpperCase().trim();
+        setClientTouched(true);
+        setClient(value);
+
+        const hit = clientsByCode[value];
+        setRaison(hit ? hit.name : "");
+        setIsClientValid(value === "" ? true : !!hit); // empty not “invalid”, just incomplete
+      }}
+      onBlur={() => setClientTouched(true)}
+      onFocus={() => setClientTouched(true)}
+      autoComplete="off"
+      className={`input ${clientTouched && !isClientValid ? "input-error" : ""}`}
+      placeholder="Ex: CGP78810"
+    />
+    {clientTouched && !isClientValid && (
+      <span className="field-error">Client introuvable</span>
+    )}
+  </div>
+</div>
+
 
             <div className="form-row">
               <label>Raison sociale</label>

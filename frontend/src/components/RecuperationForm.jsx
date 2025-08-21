@@ -1,13 +1,14 @@
 import React, {
   useEffect,
   useState,
+  useMemo,
   forwardRef,
   useImperativeHandle,
+
 } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import axios from "axios";
 import api from "../utils/api";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
@@ -76,12 +77,8 @@ const createValidationSchema = (isEditMode, isReadOnly) => {
     // Create mode: validate all required fields
     baseSchema.xsite_0 = yup.string().required("Site obligatoire");
     baseSchema.xclient_0 = yup
-      .string()
-      .matches(
-        /^[A-Za-z]+\d+$/,
-        "Client invalide (doit commencer par des lettres suivies de chiffres)"
-      )
-      .required("Client obligatoire");
+   .string()
+   .required("Client obligatoire");
     baseSchema.xraison_0 = yup.string().nullable();
     baseSchema.xcin_0 = yup
       .string()
@@ -112,6 +109,7 @@ const RecuperationForm = forwardRef(
       reset,
       getValues,
       setValue,
+      watch,
       formState: { errors },
     } = useForm({
       resolver: yupResolver(createValidationSchema(isEditMode, isReadOnly)),
@@ -125,7 +123,7 @@ const RecuperationForm = forwardRef(
         montant: "",
       },
     });
-
+   const watchedClient = watch("xclient_0");
     // State for date and time
     const [currentDate, setCurrentDate] = useState("");
     const [currentTime, setCurrentTime] = useState("");
@@ -139,6 +137,26 @@ const RecuperationForm = forwardRef(
     const [clients, setClients] = useState([]);
     const [isLoadingDropdowns, setIsLoadingDropdowns] = useState(true);
     const [siteInputError, setSiteInputError] = useState(false);
+
+    //Quick map: client_code -> client object
+    const clientsByCode = useMemo(
+  () =>
+    Object.fromEntries(
+      (clients || []).map((c) => [
+        String(c.client_code || "").trim().toUpperCase(),
+        c,
+      ])
+    ),
+  [clients]
+);
+
+useEffect(() => {
+  const code = String(watchedClient || "").trim().toUpperCase();
+  const c = clientsByCode[code];
+  const auto =
+    c ? (c.raison_sociale || c.client_name || "") : "";
+  setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
+}, [watchedClient, clientsByCode, setValue]);
 
     // State for validation - track if all required fields have valid values
     const [isSiteValid, setIsSiteValid] = useState(true);
@@ -211,6 +229,20 @@ const RecuperationForm = forwardRef(
         );
       }
     }, [initialData, reset]); // Remove sites and clients dependencies
+// Optional: fetch CIN automatically when a valid client is typed
+useEffect(() => {
+  const code = String(watchedClient || "").trim().toUpperCase();
+  if (!initialData && code && clientsByCode[code]) {
+    api
+      .get(`/recuperation/cin-by-client/${code}`)
+      .then((res) => {
+        setValue("xcin_0", res.data?.xcin_0 || "", { shouldValidate: true });
+      })
+      .catch(() => {
+        setValue("xcin_0", "", { shouldValidate: true });
+      });
+  }
+}, [watchedClient, clientsByCode, initialData, setValue]);
 
     // Separate useEffect to handle form reset after dropdown data is loaded
     useEffect(() => {
@@ -816,155 +848,61 @@ const RecuperationForm = forwardRef(
               />
             </div>{" "}
             <div className="sage-row">
-              <label>
-                Client <span className="sage-required">*</span>
-              </label>
-              <AutocompleteInput
-                options={clients.map((client) => ({
-                  id: client.id?.toString() || "",
-                  code: client.client_code || "",
-                  name: client.client_name || client.raison_sociale || "",
-                  // Store the original client data for auto-fill
-                  originalClient: client,
-                }))}
-                value={getValues("xclient_0")}
-                onChange={(e) => {
-                  const selectedValue = e.target.value;
-                  setClientHasBeenTouched(true);
-                  setValue("xclient_0", selectedValue, {
-                    shouldValidate: true,
-                  });
-                  // Validate if the entered value matches any client code
-                  if (selectedValue === "") {
-                    setIsClientValid(true); // Empty is not invalid, just not filled
-                  } else {
-                    const matchingClient = clients.find(
-                      (client) => client.client_code === selectedValue
-                    );
-                    setIsClientValid(matchingClient !== undefined);
-                  }
-                  // Auto-populate raison sociale when client is selected (only in create mode)
-                  if (!initialData) {
-                    const selectedClient = clients.find(
-                      (client) => client.client_code === selectedValue
-                    );
-                    if (selectedClient) {
-                      setValue(
-                        "xraison_0",
-                        selectedClient.raison_sociale ||
-                          selectedClient.client_name ||
-                          ""
-                      );
-                      // Fetch CIN from backend using recuperation endpoint
-                      api
-                        .get(`/recuperation/cin-by-client/${selectedValue}`)
-                        .then((res) => {
-                          setValue("xcin_0", res.data.xcin_0 || "", {
-                            shouldValidate: true,
-                          });
-                        })
-                        .catch((error) => {
-                          console.log(
-                            "CIN not found for client:",
-                            selectedValue
-                          );
-                          setValue("xcin_0", "", { shouldValidate: true });
-                        });
-                    } else {
-                      setValue("xraison_0", "");
-                      setValue("xcin_0", "", { shouldValidate: true });
-                    }
-                  }
-                }}
-                onSelect={(selectedOption) => {
-                  setClientHasBeenTouched(true);
-                  if (selectedOption && selectedOption.code) {
-                    setValue("xclient_0", selectedOption.code, {
-                      shouldValidate: true,
-                    });
-                    setIsClientValid(true);
-                    setSiteInputError(false);
-                    // Auto-populate raison sociale and fetch CIN
-                    const selectedClient = clients.find(
-                      (client) => client.client_code === selectedOption.code
-                    );
-                    if (selectedClient) {
-                      setValue(
-                        "xraison_0",
-                        selectedClient.raison_sociale ||
-                          selectedClient.client_name ||
-                          ""
-                      );
-                      // Fetch CIN from backend using recuperation endpoint
-                      api
-                        .get(
-                          `/recuperation/cin-by-client/${selectedOption.code}`
-                        )
-                        .then((res) => {
-                          setValue("xcin_0", res.data.xcin_0 || "", {
-                            shouldValidate: true,
-                          });
-                        })
-                        .catch((error) => {
-                          console.log(
-                            "CIN not found for client:",
-                            selectedOption.code
-                          );
-                          setValue("xcin_0", "", { shouldValidate: true });
-                        });
-                    } else {
-                      setValue("xraison_0", "");
-                      setValue("xcin_0", "", { shouldValidate: true });
-                    }
-                  }
-                }}
-                disabled={initialData || isLoadingDropdowns}
-                className={
-                  getInputClass("xclient_0") +
-                  (clientHasBeenTouched &&
-                  !isClientValid &&
-                  !isEditMode &&
-                  !isReadOnly
-                    ? " sage-input-error"
-                    : "")
-                }
-                onFocus={() => setFocusField("xclient_0")}
-                onBlur={() => {
-                  setFocusField("");
-                  setClientHasBeenTouched(true);
+  <label>
+    Client <span className="sage-required">*</span>
+  </label>
+  <input
+    type="text"
+    {...register("xclient_0")}
+    value={getValues("xclient_0")}
+    onChange={(e) => {
+      const v = e.target.value.trim().toUpperCase();
+      setClientHasBeenTouched(true);
+      setValue("xclient_0", v, { shouldValidate: true });
+      // live validation vs known clients
+      if (!isEditMode && !isReadOnly) {
+        if (v === "") {
+          // let Yup handle "required" on submit
+        } else {
+          if (!clientsByCode[v]) {
+            // mark invalid immediately
+            // (optional) you can also keep a local isClientValid state if you show red borders
+          }
+        }
+      }
+    }}
+    onBlur={() => {
+      setFocusField("");
+      setClientHasBeenTouched(true);
+      const v = (getValues("xclient_0") || "").trim().toUpperCase();
+      // optional: final check here (you already have schema + submit guard)
+    }}
+    onFocus={() => setFocusField("xclient_0")}
+    autoComplete="off"
+    disabled={isReadOnly || isEditMode}
+    className={getInputClass("xclient_0")}
+  />
+  {errors.xclient_0 && (
+    <span className="sage-input-error-text">
+      {errors.xclient_0.message}
+    </span>
+  )}
+</div>
 
-                  // Validate client when field loses focus
-                  const currentClientValue = getValues("xclient_0");
-                  if (!isEditMode && !isReadOnly) {
-                    if (currentClientValue === "") {
-                      setIsClientValid(true); // Empty is not invalid, just not filled
-                    } else {
-                      const matchingClient = clients.find(
-                        (client) => client.client_code === currentClientValue
-                      );
-                      setIsClientValid(matchingClient !== undefined);
-                    }
-                  }
-                }}
-                register={register("xclient_0")}
-                searchKeys={["code", "name"]}
-                displayKeys={["code", "name"]}
-                primaryKey="code"
-                noResultsText="Client introuvable"
-              />
-            </div>
             <div className="sage-row">
-              <label>Raison sociale</label>
-              <input
-                type="text"
-                {...register("xraison_0")}
-                className={getInputClass("xraison_0")}
-                onFocus={() => setFocusField("xraison_0")}
-                onBlur={() => setFocusField("")}
-                autoComplete="off"
-                disabled={initialData} // Always disabled when viewing/editing existing data
-              />
-            </div>
+  <label>Raison sociale</label>
+  {/* Visible, read-only value auto-filled from effect */}
+  <input
+    type="text"
+    readOnly
+    value={getValues("xraison_0") || ""}
+    className={getInputClass("xraison_0") + " read-only"}
+    tabIndex={-1}
+  />
+  {/* Hidden to keep the value in RHF state */}
+  <input type="hidden" {...register("xraison_0")} />
+</div>
+
             <div className="sage-row">
               <label>
                 CIN <span className="sage-required">*</span>

@@ -13,7 +13,6 @@ import CreateUser from "./pages/CreateUser";
 import Login from "./pages/Login";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-
 function App() {
   const isAuthenticated = !!localStorage.getItem("token"); // Or use your auth context
 

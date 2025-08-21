@@ -582,7 +582,6 @@ Route::middleware(['api.token'])->group(function () {
     Route::get('/notifications/{id}', [NotificationController::class, 'show']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
     Route::get('/notifications/type/{type}', [NotificationController::class, 'getByType']);
-
     // Test notification endpoint (only in local environment)
     Route::post('/notifications/test', [NotificationController::class, 'testNotification']);
 });

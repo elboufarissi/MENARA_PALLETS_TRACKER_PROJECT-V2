@@ -51,7 +51,6 @@ class Restitution extends Model
     {
         return $this->belongsTo(BpCustomer::class, 'xclient_0', 'bpcnum_0');
     }
-
     public function caution()
     {
         return $this->belongsTo(Xcaution::class, 'caution_ref', 'xnum_0');
