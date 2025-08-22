@@ -214,14 +214,20 @@ const watchedClient = watch("xclient_0");
     // State for validation - track if all required fields have valid values
     const [isSiteValid, setIsSiteValid] = useState(true);
     const [isClientValid, setIsClientValid] = useState(true);
+    const [isCamionValid, setIsCamionValid] = useState(true);
     const [isPaletteRameneValid, setIsPaletteRameneValid] = useState(true);
+    const [isPaletteADeconsignerValid, setIsPaletteADeconsignerValid] = useState(true);
+    const [isPaletteDeconsigneesValid, setIsPaletteDeconsigneesValid] = useState(true);
     const [isMatriculeValid, setIsMatriculeValid] = useState(true); // For both Matricule Camion and Matricule client
 
     // Track if user has interacted with fields (to show errors only after interaction)
     const [siteHasBeenTouched, setSiteHasBeenTouched] = useState(false);
     const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
+    const [camionHasBeenTouched, setCamionHasBeenTouched] = useState(false);
     const [paletteRameneHasBeenTouched, setPaletteRameneHasBeenTouched] =
       useState(false);
+    const [paletteADeconsignerHasBeenTouched, setPaletteADeconsignerHasBeenTouched] = useState(false);
+    const [paletteDeconsigneesHasBeenTouched, setPaletteDeconsigneesHasBeenTouched] = useState(false);
     const [matriculeHasBeenTouched, setMatriculeHasBeenTouched] =
       useState(false); // For both Matricule fields
 
@@ -636,7 +642,38 @@ useEffect(() => {
         }
 
         if (onSuccess) onSuccess();
-        // Form is not reset after successful save - keep the entered data
+        
+        // Reset form after successful save to prevent duplicate submissions
+        if (!isEditMode) {
+          reset({
+            xvalsta_0: "1",
+            xnum_0: "",
+            xsite_0: "",
+            xclient_0: "",
+            xraison_0: "",
+            xcamion_0: "",
+            palette_ramene: "",
+            palette_a_deconsigner: "",
+            palette_deconsignees: "",
+          });
+          // Reset current date and time for new entries
+          const now = new Date();
+          setCurrentDate(now.toLocaleDateString("fr-FR"));
+          setCurrentTime(now.toTimeString().slice(0, 8));
+          // Reset validation states
+          setIsSiteValid(true);
+          setIsClientValid(true);
+          setIsCamionValid(true);
+          setIsPaletteRameneValid(true);
+          setIsPaletteADeconsignerValid(true);
+          setIsPaletteDeconsigneesValid(true);
+          setSiteHasBeenTouched(false);
+          setClientHasBeenTouched(false);
+          setCamionHasBeenTouched(false);
+          setPaletteRameneHasBeenTouched(false);
+          setPaletteADeconsignerHasBeenTouched(false);
+          setPaletteDeconsigneesHasBeenTouched(false);
+        }
       } catch (error) {
         console.error("Error details:", {
           message: error.message,
@@ -827,13 +864,15 @@ useEffect(() => {
 
     // Handle client selection to auto-populate raison sociale
     // Expose submit method to parent via ref
-    useImperativeHandle(ref, () => () => {
-      document
-        .querySelector("form.sage-form")
-        .dispatchEvent(
-          new Event("submit", { cancelable: true, bubbles: true })
-        );
-    });
+    useImperativeHandle(ref, () => ({
+      submit: () => {
+        document
+          .querySelector("form.sage-form")
+          .dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+      }
+    }));
 
     return (
       <form
@@ -864,6 +903,7 @@ useEffect(() => {
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
               <button
                 type="button"
                 className="sage-validation-btn"

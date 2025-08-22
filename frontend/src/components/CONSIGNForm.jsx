@@ -157,6 +157,7 @@ const CONSIGNForm = forwardRef(
     const [isSiteValid, setIsSiteValid] = useState(true);
     const [isClientValid, setIsClientValid] = useState(true);
     const [isBpValid, setIsBpValid] = useState(true);
+    const [isCamionValid, setIsCamionValid] = useState(true);
     const [isPaletteRameneValid, setIsPaletteRameneValid] = useState(true);
     const [isPaletteAConsignerValid, setIsPaletteAConsignerValid] =
       useState(true);
@@ -166,6 +167,7 @@ const CONSIGNForm = forwardRef(
     const [siteHasBeenTouched, setSiteHasBeenTouched] = useState(false);
     const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
     const [bpHasBeenTouched, setBpHasBeenTouched] = useState(false);
+    const [camionHasBeenTouched, setCamionHasBeenTouched] = useState(false);
     const [paletteRameneHasBeenTouched, setPaletteRameneHasBeenTouched] =
       useState(false);
     const [
@@ -711,7 +713,39 @@ useEffect(() => {
         }
 
         if (onSuccess) onSuccess();
-        // Form is not reset after successful save - keep the entered data
+        
+        // Reset form after successful save to prevent duplicate submissions
+        if (!isEditMode) {
+          reset({
+            xvalsta_0: "1",
+            xnum_0: "",
+            xsite_0: "",
+            xclient_0: "",
+            xraison_0: "",
+            xbp_0: "",
+            xcamion_0: "",
+            palette_ramene: "",
+            palette_a_consigner: "",
+            palette_consignees: "",
+          });
+          // Reset current date and time for new entries
+          const now = new Date();
+          setCurrentDate(now.toLocaleDateString("fr-FR"));
+          setCurrentTime(now.toTimeString().slice(0, 8));
+          // Reset validation states
+          setIsSiteValid(true);
+          setIsClientValid(true);
+          setIsBpValid(true);
+          setIsCamionValid(true);
+          setIsPaletteRameneValid(true);
+          setIsPaletteAConsignerValid(true);
+          setSiteHasBeenTouched(false);
+          setClientHasBeenTouched(false);
+          setBpHasBeenTouched(false);
+          setCamionHasBeenTouched(false);
+          setPaletteRameneHasBeenTouched(false);
+          setPaletteAConsignerHasBeenTouched(false);
+        }
       } catch (error) {
         console.error("Error details:", {
           message: error.message,
@@ -872,13 +906,15 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
     };
 
     // Expose submit method to parent via ref
-    useImperativeHandle(ref, () => () => {
-      document
-        .querySelector("form.sage-form")
-        .dispatchEvent(
-          new Event("submit", { cancelable: true, bubbles: true })
-        );
-    });
+    useImperativeHandle(ref, () => ({
+      submit: () => {
+        document
+          .querySelector("form.sage-form")
+          .dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+      }
+    }));
 
     // Helper function to handle integer input (remove non-digits)
     const handleIntegerInput = (e) => {
@@ -936,6 +972,7 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
               <button
                 type="button"
                 className="sage-validation-btn"

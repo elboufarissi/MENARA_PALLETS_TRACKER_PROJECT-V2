@@ -124,15 +124,12 @@ export default function Consignation() {
 
   const handleSidebarEdit = () => {
     if (formRef.current) {
-      formRef.current();
+      formRef.current.submit();
     }
   };
 
   // Handler to clear form from sidebar (add new)
   const handleClearForm = () => {
-    if (formRef.current && formRef.current.clear) {
-      formRef.current.clear(); // Clear the form using the clear method
-    }
     setSelectedConsignation(null); // Clear selected consignation
     setIsEditMode(false); // Set to create mode
   };

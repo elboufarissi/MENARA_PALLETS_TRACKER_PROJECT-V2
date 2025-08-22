@@ -168,15 +168,12 @@ const DepotCautionPage = () => {
   // Handler to trigger form submit from sidebar (save/edit)
   const handleSaveForm = () => {
     if (formRef.current) {
-      formRef.current();
+      formRef.current.submit();
     }
   };
 
   // Handler to clear form from sidebar (add new)
   const handleClearForm = () => {
-    if (formRef.current && formRef.current.clear) {
-      formRef.current.clear(); // Clear the form using the clear method
-    }
     setSelectedCaution(null); // Clear selected caution
     setIsEditMode(false); // Set to create mode
   };

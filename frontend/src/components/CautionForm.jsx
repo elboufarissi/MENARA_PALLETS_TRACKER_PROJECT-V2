@@ -548,8 +548,32 @@ useEffect(() => {
 
         if (onSuccess) onSuccess();
 
-        // DO NOT clear the form - keep all data visible
-        console.log("Form submission successful - form data preserved"); // Debug log
+        // Reset form after successful save to prevent duplicate submissions
+        if (!isEditMode) {
+          reset({
+            xvalsta_0: "1",
+            xnum_0: "",
+            xsite_0: "",
+            xclient_0: "",
+            xraison_0: "",
+            xcin_0: "",
+            montant: "",
+          });
+          // Reset current date and time for new entries
+          const now = new Date();
+          setCurrentDate(now.toLocaleDateString("fr-FR"));
+          setCurrentTime(now.toTimeString().slice(0, 8));
+          // Reset validation states
+          setIsSiteValid(true);
+          setIsClientValid(true);
+          setIsCinValid(true);
+          setIsMontantValid(true);
+          setSiteHasBeenTouched(false);
+          setClientHasBeenTouched(false);
+          setCinHasBeenTouched(false);
+          setMontantHasBeenTouched(false);
+        }
+        console.log("Form submission successful - form reset for new entries"); // Debug log
       } catch (error) {
         console.error("Error details:", {
           message: error.message,
@@ -716,13 +740,15 @@ useEffect(() => {
     };
 
     // Expose submit method to parent via ref
-    useImperativeHandle(ref, () => () => {
-      document
-        .querySelector("form.sage-form")
-        .dispatchEvent(
-          new Event("submit", { cancelable: true, bubbles: true })
-        );
-    });
+    useImperativeHandle(ref, () => ({
+      submit: () => {
+        document
+          .querySelector("form.sage-form")
+          .dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+      }
+    }));
 
     return (
       <form
@@ -797,6 +823,7 @@ useEffect(() => {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
             <button
               type="button"
               className="sage-validation-btn"

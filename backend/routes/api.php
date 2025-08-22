@@ -63,26 +63,26 @@ Route::get('/test-pdf-simple', function () {
 });
 
 // Test database connection route
-Route::get('/test-db', function () {
-    try {
-        $tables = DB::select('SHOW TABLES');
-        $tableNames = array_map(function($table) {
-            $tableKey = 'Tables_in_' . config('database.connections.mysql.database');
-            return $table->$tableKey;
-        }, $tables);
+// Route::get('/test-db', function () {
+//     try {
+//         $tables = DB::select('SHOW TABLES');
+//         $tableNames = array_map(function($table) {
+//             $tableKey = 'Tables_in_' . config('database.connections.mysql.database');
+//             return $table->$tableKey;
+//         }, $tables);
 
-        return response()->json([
-            'database' => config('database.connections.mysql.database'),
-            'tables' => $tableNames,
-            'status' => 'Connected successfully'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'status' => 'Connection failed'
-        ], 500);
-    }
-});
+//         return response()->json([
+//             'database' => config('database.connections.mysql.database'),
+//             'tables' => $tableNames,
+//             'status' => 'Connected successfully'
+//         ]);
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'error' => $e->getMessage(),
+//             'status' => 'Connection failed'
+//         ], 500);
+//     }
+// });
 
 // Routes for facilities and clients (if still used by your form for dropdowns eventually)
 Route::get('/facilities', function () {

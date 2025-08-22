@@ -109,15 +109,12 @@ const Recuperation = () => {
 
   const handleSidebarEdit = () => {
     if (formRef.current) {
-      formRef.current();
+      formRef.current.submit();
     }
   };
 
   // Handler to clear form from sidebar (add new)
   const handleClearForm = () => {
-    if (formRef.current && formRef.current.clear) {
-      formRef.current.clear(); // Clear the form using the clear method
-    }
     setSelectedRecuperation(null); // Clear selected recuperation
     setIsEditMode(false); // Set to create mode
   };

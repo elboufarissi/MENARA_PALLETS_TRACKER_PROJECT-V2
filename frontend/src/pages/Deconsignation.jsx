@@ -125,15 +125,12 @@ export default function Deconsignation() {
   const handleSave = () => {
     // Trigger form submission using the form ref
     if (formRef.current) {
-      formRef.current(); // This should trigger the form submission
+      formRef.current.submit(); // This should trigger the form submission
     }
   };
 
   // Handler to clear form from sidebar (add new)
   const handleClearForm = () => {
-    if (formRef.current && formRef.current.clear) {
-      formRef.current.clear(); // Clear the form using the clear method
-    }
     setSelectedDeconsignation(null); // Clear selected deconsignation
     setIsEditMode(false); // Set to create mode
   };

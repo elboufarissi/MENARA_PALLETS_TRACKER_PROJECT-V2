@@ -14,7 +14,7 @@
 }
 
 .notification-bell:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .notification-bell.has-unread .bell-icon {
@@ -24,6 +24,7 @@
 .bell-icon {
   font-size: 20px;
   display: block;
+  color: white; /* Ensure the bell icon is white for visibility on blue background */
 }
 
 .notification-count {
@@ -45,7 +46,7 @@
 
 .notification-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px); /* Add some space between the bell and dropdown */
   right: 0;
   width: 350px;
   max-height: 500px;
