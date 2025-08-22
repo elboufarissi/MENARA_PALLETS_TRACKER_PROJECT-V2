@@ -8,7 +8,7 @@ export default function Fichiers() {
   ];
 
   return (
-    <div className="container mt-3">
+    <div className="container mt-3" style={{overflowY: 'auto', maxHeight: '100vh'}}>
       <Breadcrumb items={breadcrumbItems} />
       <h3>Page des fichiers</h3>
     </div>

@@ -380,14 +380,20 @@ useEffect(() => {
     try {
       if (!watchedClient || !watchedSite) {
         setDeliveries([]);
-        setValue("xbp_0", ""); // clear selection if scope incomplete
+        // Only clear xbp_0 if not in edit or read-only mode
+        if (!isEditMode && !(initialData && !isEditMode)) {
+          setValue("xbp_0", "");
+        }
         return;
       }
       const res = await axios.get("http://localhost:8000/api/delivery-documents", {
-        params: { client: watchedClient, site: watchedSite }, // <-- both filters
+        params: { client: watchedClient, site: watchedSite },
       });
       setDeliveries(res.data?.success ? (res.data.data ?? []) : []);
-      setValue("xbp_0", ""); // clear when scope changes
+      // Only clear xbp_0 if not in edit or read-only mode
+      if (!isEditMode && !(initialData && !isEditMode)) {
+        setValue("xbp_0", "");
+      }
     } catch (e) {
       console.error("Error fetching deliveries:", e);
       setDeliveries([]);
@@ -395,7 +401,7 @@ useEffect(() => {
   };
 
   fetchDeliveries();
-}, [watchedClient, watchedSite, setValue]);
+}, [watchedClient, watchedSite, setValue, isEditMode, initialData]);
 
     // Fetch trucks for XCAMION_0 dropdown
     useEffect(() => {
@@ -961,7 +967,7 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
             </div>
             <div className="sage-fields">
               <div className="sage-row">
-                <label>Bon de Consignation</label>
+                <label>N° de Bon</label>
                 <input
                   type="text"
                   {...register("xnum_0")}
@@ -1538,7 +1544,7 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
                 />
               </div>
             </div>
-          </div>
+          </div> <br></br>  
         </form>
       </div>
     );

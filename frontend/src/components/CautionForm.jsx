@@ -1089,6 +1089,7 @@ useEffect(() => {
         <div className="sage-section">
           <div className="sage-section-title">Lignes</div>
           <div className="sage-fields">
+
             <div className="sage-row">
               <label>
                 Montant <span className="sage-required">*</span>
@@ -1144,12 +1145,16 @@ useEffect(() => {
                 autoComplete="off"
                 disabled={initialData && !isEditMode} // Editable in edit mode
               />
+              <div>
+          
+              </div>
             </div>
-          </div>
-        </div>
+       </div> 
+        </div><br></br>  
       </form>
     );
   }
 );
 
 export default DepotCautionForm;
+

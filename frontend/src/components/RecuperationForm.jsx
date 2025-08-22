@@ -1045,8 +1045,8 @@ useEffect(() => {
               />
             </div>
           </div>
-        </div>
-      </form>
+        </div><br></br>  
+      </form> 
     );
   }
 );

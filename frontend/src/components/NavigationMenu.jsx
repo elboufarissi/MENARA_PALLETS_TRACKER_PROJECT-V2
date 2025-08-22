@@ -62,7 +62,7 @@ const NavigationMenu = () => {
               style={{ color: "#0066cc", cursor: "pointer" }}
               onClick={togglePalettesDropdown}
             >
-              Palettes-Track
+              Menara Pallet Control
             </span>
             <span className="sage-breadcrumb-sep">›</span>
             <span style={{ color: "#333", fontWeight: "normal" }}>

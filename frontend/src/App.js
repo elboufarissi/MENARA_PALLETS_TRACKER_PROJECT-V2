@@ -25,7 +25,7 @@ function ProtectedRoute({ allowedRoles, children }) {
 
   if (loading) {
     // keep the auth-initialization loader
-    return <PageLoader active text="Chargement..." />;
+    return <PageLoader active text="Chargement...>>" />;
   }
 
   if (!user) return <Navigate to="/login" />;
@@ -50,7 +50,7 @@ function App() {
   return (
     <Layout>
       {/* Loader on every route change, except audit & create-user */}
-      <RouteLoader exclude={["/audit", "/create-user","/home","/Home","/login","/flux-interne/situation-client"]} />
+  {/* RouteLoader removed: now only used above CONSIGNForm */}
 
       <Routes>
         <Route path="/login" element={<LoginPage />} />

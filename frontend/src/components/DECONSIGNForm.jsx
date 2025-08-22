@@ -842,72 +842,73 @@ useEffect(() => {
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
       >
-        <div className="sage-form-header">
-          <div className="sage-form-header-left">
-            <FaArrowLeft className="sage-nav-arrow" />
-            <FaArrowRight className="sage-nav-arrow" />
-            <span className="sage-form-title">
-              {isEditMode ? "Modification de Déconsignation" : "Déconsignation"}
-            </span>
-            {isEditMode && (
-              <span
-                style={{
-                  marginLeft: "10px",
-                  fontSize: "0.65rem",
-                  color: "#ff9800",
-                  fontWeight: "normal",
-                }}
-              >
-                (Seuls Matricule et Palettes modifiables)
+  <div className="form-scrollable" style={{minHeight: '60vh', overflowY: 'visible', paddingRight: 8}}>
+          <div className="sage-form-header">
+            <div className="sage-form-header-left">
+              <FaArrowLeft className="sage-nav-arrow" />
+              <FaArrowRight className="sage-nav-arrow" />
+              <span className="sage-form-title">
+                {isEditMode ? "Modification de Déconsignation" : "Déconsignation"}
               </span>
-            )}
+              {isEditMode && (
+                <span
+                  style={{
+                    marginLeft: "10px",
+                    fontSize: "0.65rem",
+                    color: "#ff9800",
+                    fontWeight: "normal",
+                  }}
+                >
+                  (Seuls Matricule et Palettes modifiables)
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                type="button"
+                className="sage-validation-btn"
+                onClick={handleValidationClick}
+                style={
+                  currentValidationStatus === "1" &&
+                  canUserValidate &&
+                  userRole !== "CHEF_PARC"
+                    ? {
+                        backgroundColor: "#0866ff",
+                        color: "#fff",
+                        cursor: "pointer",
+                        opacity: 1,
+                      }
+                    : {
+                        backgroundColor: "#d3d3d3", // Gray background
+                        color: "#888", // Gray text
+                        opacity: 0.6,
+                        cursor: "not-allowed",
+                      }
+                }
+                disabled={
+                  currentValidationStatus === "2" ||
+                  !canUserValidate ||
+                  userRole === "CHEF_PARC"
+                }
+              >
+                Validation
+              </button>
+              <FaSignOutAlt className="caution-header-icon" />
+            </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <button
-              type="button"
-              className="sage-validation-btn"
-              onClick={handleValidationClick}
-              style={
-                currentValidationStatus === "1" &&
-                canUserValidate &&
-                userRole !== "CHEF_PARC"
-                  ? {
-                      backgroundColor: "#0866ff",
-                      color: "#fff",
-                      cursor: "pointer",
-                      opacity: 1,
-                    }
-                  : {
-                      backgroundColor: "#d3d3d3", // Gray background
-                      color: "#888", // Gray text
-                      opacity: 0.6,
-                      cursor: "not-allowed",
-                    }
-              }
-              disabled={
-                currentValidationStatus === "2" ||
-                !canUserValidate ||
-                userRole === "CHEF_PARC"
-              }
-            >
-              Validation
-            </button>
-            <FaSignOutAlt className="caution-header-icon" />
-          </div>
-        </div>
-        <div className="sage-section">
-          <div className="sage-section-title">
-            <span className="sage-section-icon">&#8962;</span> Général
-          </div>
-          <div className="sage-fields">
-            <div className="sage-row">
-              <label>Bon de Déconsignation</label>
-              <input
-                type="text"
-                {...register("xnum_0")}
-                disabled
-                className="sage-input"
-                value={initialData?.xnum_0 || ""}
+          <div className="sage-section">
+            <div className="sage-section-title">
+              <span className="sage-section-icon">&#8962;</span> Général
+            </div>
+            <div className="sage-fields">
+              <div className="sage-row">
+                <label>N° de Bon</label>
+                <input
+                  type="text"
+                  {...register("xnum_0")}
+                  disabled
+                  className="sage-input"
+                  value={initialData?.xnum_0 || ""}
                 tabIndex={-1}
               />
             </div>{" "}
@@ -1365,6 +1366,7 @@ useEffect(() => {
               />
             </div>
           </div>
+        </div> <br></br>  
         </div>
       </form>
     );
@@ -1372,3 +1374,10 @@ useEffect(() => {
 );
 
 export default DECONSIGNForm;
+
+// Ajout CSS local pour le scroll si non déjà présent
+// À placer dans le fichier CSS importé ou en style inline :
+// .form-scrollable { max-height: 75vh; overflow-y: auto; padding-right: 8px; }
+
+// Pour appliquer le scroll, entourez le contenu du formulaire par :
+// <div className="form-scrollable"> ...formulaire... </div>

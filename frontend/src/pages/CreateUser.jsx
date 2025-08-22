@@ -12,6 +12,7 @@ const CreateUser = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -43,21 +44,19 @@ const CreateUser = () => {
     fetchUsers();
     setSelectedUser(null);
     setIsEditMode(false);
+    setShowForm(false);
   };
 
   const handleEditUser = (user) => {
     setSelectedUser(user);
     setIsEditMode(true);
+    setShowForm(true);
   };
 
   const handleDeleteUser = async (userToDelete) => {
     if (!userToDelete || !userToDelete.USER_ID) return;
 
-    if (
-      !window.confirm(
-        "Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible."
-      )
-    ) {
+    if (!window.confirm("Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.")) {
       return;
     }
 
@@ -80,6 +79,7 @@ const CreateUser = () => {
   const handleClearForm = () => {
     setSelectedUser(null);
     setIsEditMode(false);
+    setShowForm(false);
   };
 
   return (
@@ -92,43 +92,49 @@ const CreateUser = () => {
         </div>
 
         <div className="content-container">
-          <div className="form-section">
-            <div className="form-header">
-              <h3>
-                {isEditMode
-                  ? "Modifier l'utilisateur"
-                  : "Créer un nouvel utilisateur"}
-              </h3>
-            </div>
-            <UserForm
-              onSuccess={handleFormSuccess}
-              initialData={selectedUser}
-              isEditMode={isEditMode}
-              onClear={handleClearForm}
-            />
-          </div>
-
           <div className="users-section">
             <div className="users-header">
               <h3>Utilisateurs du système</h3>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setShowForm(true);
+                  setIsEditMode(false);
+                  setSelectedUser(null);
+                }}
+              >
+                Créer un nouvel utilisateur
+              </button>
             </div>
-            {isLoading && (
-              <p className="text-center">Chargement des utilisateurs...</p>
-            )}
-            {error && (
-              <p className="text-danger text-center">
-                Erreur de chargement: {error}
-              </p>
-            )}
+
+            {isLoading && <p className="text-center">Chargement des utilisateurs...</p>}
+            {error && <p className="text-danger text-center">Erreur de chargement: {error}</p>}
+
             {!isLoading && (
-              <UserTable
-                users={users}
-                onEditUser={handleEditUser}
-                onDeleteUser={handleDeleteUser}
-                currentUserId={user?.USER_ID}
-              />
+              <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                <UserTable
+                  users={users}
+                  onEditUser={handleEditUser}
+                  onDeleteUser={handleDeleteUser}
+                  currentUserId={user?.USER_ID}
+                />
+              </div>
             )}
           </div>
+
+          {showForm && (
+            <div className="form-section">
+              <div className="form-header">
+                <h3>{isEditMode ? "Modifier l'utilisateur" : "Créer un nouvel utilisateur"}</h3>
+              </div>
+              <UserForm
+                onSuccess={handleFormSuccess}
+                initialData={selectedUser}
+                isEditMode={isEditMode}
+                onClear={handleClearForm}
+              />
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -29,10 +29,22 @@ const ConsignationTable = ({
     { key: "xvalsta_0", label: "Validée" },
   ];
   return (
-    <div style={{ padding: 0, margin: 0 }}>
-      <h4>Dernières consignations</h4>
-      <div className="table-responsive">
-        <table className="table table-striped table-hover table-sm table-bordered custom-table-style">
+      <div style={{ padding: 0, margin: 0, width: '100%' }}>
+        <h4>Dernières consignations</h4>
+        <div
+          className="table-responsive"
+          style={{
+            width: '100%',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            maxWidth: '100vw',
+            boxSizing: 'border-box',
+          }}
+        >
+          <table
+            className="table table-striped table-hover table-sm table-bordered custom-table-style"
+            style={{ minWidth: 700, width: '100%', tableLayout: 'auto' }}
+          >
           <thead>
             <tr className="main-header-row">
               {columns.map((col) => (
@@ -83,8 +95,8 @@ const ConsignationTable = ({
               >
                 <td>{consignation.xnum_0}</td>
                 <td>
-                  {consignation.facility
-                    ? consignation.facility.fcynam_0
+                  {consignation.facility && consignation.facility.fcynam_0
+                    ? `${consignation.facility.fcynam_0}${consignation.xsite_0 ? ' (' + consignation.xsite_0 + ')' : ''}`
                     : consignation.xsite_0 || "N/A"}
                 </td>
                 <td>

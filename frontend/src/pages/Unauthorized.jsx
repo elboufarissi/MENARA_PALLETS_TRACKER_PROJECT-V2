@@ -10,7 +10,9 @@ export default function Unauthorized() {
       alignItems: "center",
       justifyContent: "center",
       height: "80vh",
-      color: "#333"
+      color: "#333",
+      overflowY: "auto",
+      maxHeight: '100vh'
     }}>
       <div style={{ fontSize: 60, color: "#d32f2f", marginBottom: 16 }}>
         <span role="img" aria-label="warning">&#9888;</span>

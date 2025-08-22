@@ -126,7 +126,7 @@ const clientsByCode = useMemo(() => {
 
 
   return (
-    <>
+    <div style={{overflowY: 'auto', maxHeight: '100vh'}}>
       <CautionHeader user={user} />
       <div className="situation-container">
         <div className="situation-main">
@@ -239,6 +239,6 @@ const clientsByCode = useMemo(() => {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
