@@ -188,146 +188,147 @@ const UserForm = ({ onSuccess, initialData, isEditMode, onClear }) => {
   return (
     <div className="user-form-container">
       <form onSubmit={handleSubmit(onSubmit)} className="user-form">
-        <div className="form-row">
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="prenom" className="form-label">
+                Prénom <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                id="prenom"
+                className={`form-control ${errors.prenom ? "is-invalid" : ""}`}
+                {...register("prenom")}
+                disabled={isSubmitting}
+              />
+              {errors.prenom && (
+                <div className="invalid-feedback">{errors.prenom.message}</div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="nom" className="form-label">
+                Nom <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                id="nom"
+                className={`form-control ${errors.nom ? "is-invalid" : ""}`}
+                {...register("nom")}
+                disabled={isSubmitting}
+              />
+              {errors.nom && (
+                <div className="invalid-feedback">{errors.nom.message}</div>
+              )}
+            </div>
+          </div>
+
           <div className="form-group">
-            <label htmlFor="prenom" className="form-label">
-              Prénom <span className="text-danger">*</span>
+            <label htmlFor="username" className="form-label">
+              Nom d'utilisateur
             </label>
             <input
               type="text"
-              id="prenom"
-              className={`form-control ${errors.prenom ? "is-invalid" : ""}`}
-              {...register("prenom")}
-              disabled={isSubmitting}
+              id="username"
+              className="form-control"
+              value={generatedUsername}
+              disabled
+              readOnly
             />
-            {errors.prenom && (
-              <div className="invalid-feedback">{errors.prenom.message}</div>
-            )}
+            <small className="form-text text-muted">
+              {isEditMode
+                ? "Le nom d'utilisateur ne peut pas être modifié"
+                : "Généré automatiquement à partir du prénom et nom"}
+            </small>
           </div>
 
           <div className="form-group">
-            <label htmlFor="nom" className="form-label">
-              Nom <span className="text-danger">*</span>
+            <label htmlFor="role" className="form-label">
+              Rôle <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
-              id="nom"
-              className={`form-control ${errors.nom ? "is-invalid" : ""}`}
-              {...register("nom")}
+            <select
+              id="role"
+              className={`form-control ${errors.role ? "is-invalid" : ""}`}
+              {...register("role")}
               disabled={isSubmitting}
-            />
-            {errors.nom && (
-              <div className="invalid-feedback">{errors.nom.message}</div>
-            )}
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="username" className="form-label">
-            Nom d'utilisateur
-          </label>
-          <input
-            type="text"
-            id="username"
-            className="form-control"
-            value={generatedUsername}
-            disabled
-            readOnly
-          />
-          <small className="form-text text-muted">
-            {isEditMode
-              ? "Le nom d'utilisateur ne peut pas être modifié"
-              : "Généré automatiquement à partir du prénom et nom"}
-          </small>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="role" className="form-label">
-            Rôle <span className="text-danger">*</span>
-          </label>
-          <select
-            id="role"
-            className={`form-control ${errors.role ? "is-invalid" : ""}`}
-            {...register("role")}
-            disabled={isSubmitting}
-          >
-            <option value="">Sélectionner un rôle</option>
-            {roles.map((role) => (
-              <option key={role.value} value={role.value}>
-                {role.label}
-              </option>
-            ))}
-          </select>
-          {errors.role && (
-            <div className="invalid-feedback">{errors.role.message}</div>
-          )}
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              Mot de passe{" "}
-              {!isEditMode && <span className="text-danger">*</span>}
-            </label>
-            <input
-              type="password"
-              id="password"
-              className={`form-control ${errors.password ? "is-invalid" : ""}`}
-              {...register("password")}
-              disabled={isSubmitting}
-              placeholder={isEditMode ? "Laisser vide pour ne pas changer" : ""}
-            />
-            {errors.password && (
-              <div className="invalid-feedback">{errors.password.message}</div>
+            >
+              <option value="">Sélectionner un rôle</option>
+              {roles.map((role) => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
+              ))}
+            </select>
+            {errors.role && (
+              <div className="invalid-feedback">{errors.role.message}</div>
             )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">
-              Confirmer le mot de passe{" "}
-              {!isEditMode && <span className="text-danger">*</span>}
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              className={`form-control ${
-                errors.confirmPassword ? "is-invalid" : ""
-              }`}
-              {...register("confirmPassword")}
-              disabled={isSubmitting}
-              placeholder={isEditMode ? "Laisser vide pour ne pas changer" : ""}
-            />
-            {errors.confirmPassword && (
-              <div className="invalid-feedback">
-                {errors.confirmPassword.message}
-              </div>
-            )}
-          </div>
-        </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                Mot de passe{" "}
+                {!isEditMode && <span className="text-danger">*</span>}
+              </label>
+              <input
+                type="password"
+                id="password"
+                className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                {...register("password")}
+                disabled={isSubmitting}
+                placeholder={isEditMode ? "Laisser vide pour ne pas changer" : ""}
+              />
+              {errors.password && (
+                <div className="invalid-feedback">{errors.password.message}</div>
+              )}
+            </div>
 
-        <div className="form-actions">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isSubmitting}
-          >
-            {isSubmitting
-              ? "Enregistrement..."
-              : isEditMode
-              ? "Modifier"
-              : "Créer"}
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleClear}
-            disabled={isSubmitting}
-          >
-            {isEditMode ? "Annuler" : "Vider"}
-          </button>
-        </div>
-      </form>
-    </div>
+            <div className="form-group">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirmer le mot de passe{" "}
+                {!isEditMode && <span className="text-danger">*</span>}
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                className={`form-control ${
+                  errors.confirmPassword ? "is-invalid" : ""
+                }`}
+                {...register("confirmPassword")}
+                disabled={isSubmitting}
+                placeholder={isEditMode ? "Laisser vide pour ne pas changer" : ""}
+              />
+              {errors.confirmPassword && (
+                <div className="invalid-feedback">
+                  {errors.confirmPassword.message}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Enregistrement..."
+                : isEditMode
+                ? "Modifier"
+                : "Créer"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleClear}
+              disabled={isSubmitting}
+            >
+              {isEditMode ? "Annuler" : "Vider"}
+            </button>
+          </div>
+
+        </form>
+      </div>
   );
 };
 

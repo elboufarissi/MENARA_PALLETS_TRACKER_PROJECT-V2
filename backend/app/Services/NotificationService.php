@@ -56,7 +56,7 @@ class NotificationService
             Log::warning("Could not fetch client name for {$caution->xclient_0}: " . $e->getMessage());
         }
         
-        $message = "Mr {$clientName} vient de déposer une caution de {$caution->montant} DH, il est en route pour faire une consignation";
+        $message = "{$clientName} vient de déposer une caution de {$caution->montant} DH, il est en route pour faire une consignation";
         Log::info("NotificationService: Creating notification with message: {$message}");
         
         return self::create([
@@ -90,7 +90,7 @@ class NotificationService
         return self::create([
             'type' => 'deconsignation_agent_created',
             'title' => 'Nouvelle demande de déconsignation',
-            'message' => "Mr {$clientName} vient de demander une déconsignation, Merci de bien vouloir renseigner les palettes conformes",
+            'message' => "{$clientName} vient de demander une déconsignation, Merci de bien vouloir renseigner les palettes conformes",
             'data' => [
                 'client_code' => $deconsignation->xclient_0,
                 'client_name' => $clientName,
@@ -115,7 +115,7 @@ class NotificationService
         $notificationCaissiere = self::create([
             'type' => 'deconsignation_chef_filled',
             'title' => 'Déconsignation en attente de validation',
-            'message' => "Déconsignation numéro {$deconsignation->xnum_0} pour Mr. {$deconsignation->xraison_0} en attente de validation",
+            'message' => "Déconsignation numéro {$deconsignation->xnum_0} pour {$deconsignation->xraison_0} en attente de validation",
             'data' => [
                 'client_code' => $deconsignation->xclient_0,
                 'site_code' => $deconsignation->xsite_0,

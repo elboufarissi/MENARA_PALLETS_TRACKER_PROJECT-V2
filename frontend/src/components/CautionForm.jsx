@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import React, { useEffect, useState, useMemo, forwardRef, useImperativeHandle } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -106,13 +101,16 @@ const DepotCautionForm = forwardRef(
     const isReadOnly = initialData && !isEditMode; // Read-only when viewing existing data but not editing
 
     const {
-      register,
-      handleSubmit,
-      reset,
-      getValues,
-      setValue,
-      formState: { errors },
-    } = useForm({
+  register,
+  handleSubmit,
+  reset,
+  getValues,
+  setValue,
+  watch,
+  setError,
+  clearErrors,
+  formState: { errors },
+} = useForm({
       resolver: yupResolver(createValidationSchema(isEditMode, isReadOnly)),
       defaultValues: {
         xvalsta_0: "1", // Default to 1 (Non)
@@ -150,6 +148,7 @@ const DepotCautionForm = forwardRef(
     const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
     const [cinHasBeenTouched, setCinHasBeenTouched] = useState(false);
     const [montantHasBeenTouched, setMontantHasBeenTouched] = useState(false);
+    const clientsReady = !isLoadingDropdowns && clients.length > 0;
 
     useEffect(() => {
       if (initialData) {
@@ -247,6 +246,76 @@ const DepotCautionForm = forwardRef(
       reset,
       currentValidationStatus,
     ]);
+// Quick map: client_code -> client object
+const clientsByCode = useMemo(
+  () =>
+    Object.fromEntries(
+      (clients || []).map((c) => [
+        String(c.client_code || "").trim().toUpperCase(),
+        c,
+      ])
+    ),
+  [clients]
+);
+useEffect(() => {
+  if (!initialData) return;
+  const pre = initialData.xraison_0 || "";
+  if (pre) {
+    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
+  }
+}, [initialData, setValue]);
+
+// Watch the typed client code
+const watchedClientCode = watch("xclient_0");
+
+// Keep raison sociale & CIN auto in sync with client code
+useEffect(() => {
+  const code = String(watchedClientCode || "").trim().toUpperCase();
+  const client = clientsByCode[code];
+
+  // keep raison in sync (guarded)
+  const autoRaison = client ? (client.raison_sociale || client.client_name || "") : "";
+  if (autoRaison) {
+    const current = (getValues("xraison_0") || "").trim();
+    if (current !== autoRaison) {
+      setValue("xraison_0", autoRaison, { shouldValidate: false, shouldDirty: true });
+    }
+  }
+
+  // 🔒 Only show “introuvable” once clients are loaded
+  if (code === "") {
+    clearErrors("xclient_0");
+  } else if (!client) {
+    if (clientsReady) {
+      setError("xclient_0", { type: "manual", message: "Client introuvable" });
+    } else {
+      clearErrors("xclient_0"); // suppress flicker while loading
+    }
+  } else {
+    clearErrors("xclient_0");
+  }
+
+  // CIN hydration (unchanged)
+  if (client) {
+    api
+      .get(`/xcaution/cin-by-client/${code}`)
+      .then((res) => setValue("xcin_0", (res.data?.xcin_0 || "").toUpperCase(), { shouldValidate: false }))
+      .catch(() => setValue("xcin_0", "", { shouldValidate: true }));
+  } else if (clientsReady) {
+    // only clear when we definitively know it's not a client
+    setValue("xcin_0", "", { shouldValidate: false });
+  }
+}, [
+  watchedClientCode,
+  clientsByCode,
+  setValue,
+  setError,
+  clearErrors,
+  getValues,
+  clientsReady,     // 👈 add this dep
+]);
+
+
 
     // Fetch dropdown data for sites and clients
     useEffect(() => {
@@ -874,141 +943,49 @@ const DepotCautionForm = forwardRef(
               />
             </div>{" "}
             <div className="sage-row">
-              <label>
-                Client <span className="sage-required">*</span>
-              </label>
-              <AutocompleteInput
-                options={clients.map((client) => ({
-                  id: client.id?.toString() || "",
-                  code: client.client_code || "",
-                  name: client.client_name || client.raison_sociale || "",
-                  // Store the original client data for auto-fill
-                  originalClient: client,
-                }))}
-                value={getValues("xclient_0")}
-                onChange={(e) => {
-                  const selectedValue = e.target.value;
-                  setClientHasBeenTouched(true);
-                  setValue("xclient_0", selectedValue, {
-                    shouldValidate: true,
-                  });
-                  // Validate if the entered value matches any client code
-                  if (selectedValue === "") {
-                    setIsClientValid(true);
-                  } else {
-                    const matchingClient = clients.find(
-                      (client) => client.client_code === selectedValue
-                    );
-                    setIsClientValid(matchingClient !== undefined);
-                  }
-                  // Auto-populate raison sociale and fetch CIN when client is selected
-                  const selectedClient = clients.find(
-                    (client) => client.client_code === selectedValue
-                  );
-                  if (selectedClient) {
-                    setValue(
-                      "xraison_0",
-                      selectedClient.raison_sociale ||
-                        selectedClient.client_name ||
-                        ""
-                    );
-                    // Always fetch CIN from backend for existing validated cautions
-                    api
-                      .get(`/xcaution/cin-by-client/${selectedValue}`)
-                      .then((res) => {
-                        setValue("xcin_0", res.data.xcin_0 || "", {
-                          shouldValidate: true,
-                        });
-                      })
-                      .catch(() => {
-                        // If no validated caution found, clear CIN field
-                        setValue("xcin_0", "", { shouldValidate: true });
-                      });
-                  } else {
-                    setValue("xraison_0", "");
-                    setValue("xcin_0", "", { shouldValidate: true });
-                  }
-                }}
-                onSelect={(option) => {
-                  setClientHasBeenTouched(true);
-                  if (option && option.code) {
-                    // Always auto-populate and fetch CIN when client is selected
-                    const selectedClient = clients.find(
-                      (client) => client.client_code === option.code
-                    );
-                    if (selectedClient) {
-                      setValue(
-                        "xraison_0",
-                        selectedClient.raison_sociale ||
-                          selectedClient.client_name ||
-                          ""
-                      );
-                      // Always fetch CIN from backend for existing validated cautions
-                      api
-                        .get(`/xcaution/cin-by-client/${option.code}`)
-                        .then((res) => {
-                          setValue("xcin_0", res.data.xcin_0 || "", {
-                            shouldValidate: true,
-                          });
-                        })
-                        .catch(() => {
-                          // If no validated caution found, clear CIN field
-                          setValue("xcin_0", "", { shouldValidate: true });
-                        });
-                    } else {
-                      setValue("xraison_0", "");
-                      setValue("xcin_0", "", { shouldValidate: true });
-                    }
-                    setIsClientValid(true);
-                  }
-                }}
-                disabled={initialData || isLoadingDropdowns}
-                className={
-                  getInputClass("xclient_0") +
-                  (clientHasBeenTouched &&
-                  !isClientValid &&
-                  !isEditMode &&
-                  !isReadOnly
-                    ? " sage-input-error"
-                    : "")
-                }
-                onFocus={() => setFocusField("xclient_0")}
-                onBlur={() => {
-                  setFocusField("");
-                  setClientHasBeenTouched(true);
+  <label>
+    Client <span className="sage-required">*</span>
+  </label>
+  <input
+    type="text"
+    {...register("xclient_0")}
+    value={getValues("xclient_0")}
+    onChange={(e) => {
+      // force uppercase & trim
+      const v = e.target.value.trim().toUpperCase();
+      setValue("xclient_0", v, { shouldValidate: true });
+      // live validation moved into the effect; keep the UX snappy
+    }}
+    onBlur={() => {
+      const v = (getValues("xclient_0") || "").trim().toUpperCase();
+      if (v && !clientsByCode[v]) {
+        setError("xclient_0", { type: "manual", message: "Client introuvable" });
+      }
+    }}
+    onFocus={() => {/* optional focus styling already handled by getInputClass */}}
+    autoComplete="off"
+    disabled={!!initialData && !isEditMode}
+    className={getInputClass("xclient_0")}
+  />
+  {errors.xclient_0 && (
+    <span className="sage-input-error-text">{errors.xclient_0.message}</span>
+  )}
+</div>
 
-                  // Validate client when field loses focus
-                  const currentClientValue = getValues("xclient_0");
-                  if (!isEditMode && !isReadOnly) {
-                    if (currentClientValue === "") {
-                      setIsClientValid(true); // Empty is not invalid, just not filled
-                    } else {
-                      const matchingClient = clients.find(
-                        (client) => client.client_code === currentClientValue
-                      );
-                      setIsClientValid(matchingClient !== undefined);
-                    }
-                  }
-                }}
-                register={register("xclient_0")}
-                searchKeys={["code", "name"]}
-                displayKeys={["code", "name"]}
-                primaryKey="code"
-                noResultsText="Client introuvable"
-              />
-            </div>
             <div className="sage-row">
-              <label>Raison sociale</label>{" "}
-              <input
-                type="text"
-                {...register("xraison_0")}
-                className={getInputClass("xraison_0")}
-                onFocus={() => setFocusField("xraison_0")}
-                onBlur={() => setFocusField("")}
-                autoComplete="off"
-                disabled={initialData} // Always disabled when viewing/editing existing data
-              />
-            </div>
+  <label>Raison sociale</label>
+  {/* Visible, read-only value (auto-filled by the effect) */}
+  <input
+    type="text"
+    readOnly
+    value={watch("xraison_0") || ""}
+    className={getInputClass("xraison_0") + " read-only"}
+    tabIndex={-1}
+  />
+  {/* Hidden to keep it in RHF state */}
+  <input type="hidden" {...register("xraison_0")} />
+</div>
+
             <div className="sage-row">
               <label>
                 CIN <span className="sage-required">*</span>
@@ -1112,6 +1089,7 @@ const DepotCautionForm = forwardRef(
         <div className="sage-section">
           <div className="sage-section-title">Lignes</div>
           <div className="sage-fields">
+
             <div className="sage-row">
               <label>
                 Montant <span className="sage-required">*</span>
@@ -1167,12 +1145,16 @@ const DepotCautionForm = forwardRef(
                 autoComplete="off"
                 disabled={initialData && !isEditMode} // Editable in edit mode
               />
+              <div>
+          
+              </div>
             </div>
-          </div>
-        </div>
+       </div> 
+        </div><br></br>  
       </form>
     );
   }
 );
 
 export default DepotCautionForm;
+

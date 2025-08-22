@@ -23,3 +23,4 @@ Route::get('/', function () {
 Route::middleware(['web'])->group(function () {
     Route::post('/Bon-Caution.pdf', [XcautionController::class, 'testPDF'])->name('xcaution.test-pdf-web');
 });
+

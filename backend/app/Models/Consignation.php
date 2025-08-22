@@ -12,7 +12,6 @@ use App\Models\User;
 class Consignation extends Model
 {
     use HasFactory;
-
     protected $table = 'xconsignation';
     protected $primaryKey = 'xnum_0';
     public $incrementing = false;
@@ -35,7 +34,6 @@ class Consignation extends Model
         'created_at',
         'updated_at'
     ];
-
     protected $casts = [
         'xdate_0' => 'date',
         'palette_ramene' => 'integer',
@@ -72,12 +70,12 @@ class Consignation extends Model
     // ---------- Relations ----------
     public function facility()
     {
-        return $this->belongsTo(Facility::class, 'xsite_0', 'fcy_0');
+        return $this->belongsTo(Facility::class, 'xsite_0', 'FCY_0');
     }
 
     public function customer()
     {
-        return $this->belongsTo(BpCustomer::class, 'xclient_0', 'bpcnum_0');
+        return $this->belongsTo(BpCustomer::class, 'xclient_0', 'BPCNUM_0');
     }
 
     // ---------- Balance helpers ----------
@@ -85,7 +83,6 @@ class Consignation extends Model
     {
         return Csolde::getBalance($this->xclient_0, $this->xsite_0);
     }
-
     public function getSoldeAttribute()
     {
         return $this->getSolde();

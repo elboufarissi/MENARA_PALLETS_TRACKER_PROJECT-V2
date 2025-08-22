@@ -207,12 +207,14 @@ const DepotCautionPage = () => {
             style={{
               width: "65%",
               minWidth: 0,
-              overflow: "auto",
+              overflow: "hidden",
               padding: 0,
               margin: 0,
               background: "#f4f6f8",
               borderRight: "1px solid #e0e0e0",
               fontSize: "0.93rem",
+              height: '100%',
+              boxSizing: 'border-box',
             }}
           >
             {isLoading && (
@@ -241,7 +243,7 @@ const DepotCautionPage = () => {
             style={{
               width: "35%",
               minWidth: 0,
-              overflow: "auto",
+              overflow: "hidden",
               background: "#fff",
               boxShadow: "0 0 4px #e0e0e0",
               padding: 0,
@@ -251,6 +253,7 @@ const DepotCautionPage = () => {
               flexDirection: "row",
               alignItems: "flex-start",
               height: "100%",
+              boxSizing: 'border-box',
             }}
           >
             <div style={{ flex: 1, padding: 0, margin: 0 }}>

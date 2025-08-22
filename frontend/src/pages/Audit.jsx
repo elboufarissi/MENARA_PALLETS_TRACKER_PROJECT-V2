@@ -2,16 +2,15 @@
 import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import {
-  CCard, CCardHeader, CCardBody,
+  CCard, CCardBody, CCardHeader,
   CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
   CTableBody, CTableDataCell, CModal, CModalHeader, CModalTitle,
   CModalBody, CSpinner, CBadge
 } from '@coreui/react'
-import { FaFilter, FaCalendarAlt } from 'react-icons/fa'
+import { FaFilter, FaCalendarAlt, FaSearch } from 'react-icons/fa'
 import CautionHeader from '../components/CautionHeader'
-import '../components/Audit.css'
 
-// ---------------------- Axios (+ token) ----------------------
+// ==================== Axios ====================
 const api = axios.create({ baseURL: 'http://127.0.0.1:8000/api' })
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
@@ -19,24 +18,22 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// ---------------------- Helpers ----------------------
+// ==================== Helpers ====================
 const lastToken = (s = '') => String(s).toLowerCase().split('_').pop()
-
 const actionLabelFr = (desc = '') => {
   const a = lastToken(desc)
   const map = {
-    created:     'Création',
-    updated:     'Modification',
-    deupdated:   'Modification annulée',
-    deleted:     'Suppression',
-    validated:   'Validation',
+    created: 'Création',
+    updated: 'Modification',
+    deupdated: 'Annulation modif',
+    deleted: 'Suppression',
+    validated: 'Validation',
     devalidated: 'Dévalidation',
-    restored:    'Restauration',
-    printed:     'Impression',
+    restored: 'Restauration',
+    printed: 'Impression',
   }
   return map[a] || (desc || '—')
 }
-
 const actionColor = (desc = '') => {
   const a = lastToken(desc)
   if (a === 'deleted') return 'danger'
@@ -44,48 +41,34 @@ const actionColor = (desc = '') => {
   if (a === 'updated' || a === 'deupdated') return 'warning'
   if (a === 'validated') return 'primary'
   if (a === 'devalidated') return 'secondary'
-  return 'secondary'
+  return 'dark'
 }
-
 const renderModel = (log) =>
   log.subject_model || (log.subject_type ? log.subject_type.split('\\').pop() : '')
+const showVal = (v) =>
+  v === null || v === undefined || v === ''
+    ? '—'
+    : typeof v === 'object'
+    ? JSON.stringify(v, null, 2)
+    : String(v)
 
-const showVal = (v) => {
-  if (v === null || v === undefined || v === '') return '—'
-  if (typeof v === 'object') {
-    try { return JSON.stringify(v) } catch { return String(v) }
-  }
-  return String(v)
-}
-
-// ====================== Composant ======================
+// ==================== Composant ====================
 const Audit = () => {
-  // Entête utilisateur
   const [user, setUser] = useState(null)
   const fetchUser = async () => {
     try {
       const { data } = await api.get('/auth/me')
       const u = data?.user ?? data
       setUser({
-        FULL_NAME: u?.FULL_NAME ?? u?.name ?? null,
-        ROLE: u?.ROLE ?? u?.role ?? null,
-        USERNAME: u?.USERNAME ?? u?.username ?? null,
+        FULL_NAME: u?.FULL_NAME ?? u?.name,
+        ROLE: u?.ROLE ?? u?.role,
+        USERNAME: u?.USERNAME ?? u?.username,
       })
     } catch {
-      try {
-        const { data } = await api.get('/auth/debug-token')
-        setUser({
-          FULL_NAME: data?.user_name ?? null,
-          ROLE: data?.user_role ?? null,
-          USERNAME: data?.user_username ?? null,
-        })
-      } catch {
-        setUser(null)
-      }
+      setUser(null)
     }
   }
 
-  // Tableau & filtres
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -93,312 +76,288 @@ const Audit = () => {
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1 })
   const [selectedLog, setSelectedLog] = useState(null)
 
-  const [filters, setFilters] = useState({
-    user: '', action: '', model: '', date: '', subject: '',
-  })
-
+  const [filters, setFilters] = useState({ user: '', action: '', model: '', date: '', subject: '' })
   const debRef = useRef(null)
   const triggerFetch = (page = 1) => {
     if (debRef.current) clearTimeout(debRef.current)
     debRef.current = setTimeout(() => fetchLogs(page), 400)
   }
-
   const handleHeaderFilter = (field, value) => {
     setFilters((f) => ({ ...f, [field]: value }))
     triggerFetch(1)
   }
 
   const fetchLogs = async (page = 1) => {
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
     try {
-      const params = {
-        user:    filters.user || undefined,
-        action:  filters.action || undefined,
-        model:   filters.model || undefined,
-        subject: filters.subject || undefined,
-        date:    filters.date || undefined,
-        page,
-        per_page: perPage,
-      }
-
+      const params = { ...filters, page, per_page: perPage }
       const { data } = await api.get('/logs', { params })
       setLogs(data.data || [])
-      setPagination({
-        current_page: data.current_page || 1,
-        last_page: data.last_page || 1
-      })
+      setPagination({ current_page: data.current_page || 1, last_page: data.last_page || 1 })
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Erreur lors du chargement des journaux')
+      setError(err?.response?.data?.message || err.message || 'Erreur lors du chargement')
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { fetchUser(); fetchLogs() }, []) // initial
+  useEffect(() => {
+    fetchUser()
+    fetchLogs()
+  }, [])
 
   const renderUser = (log) =>
-    log.user_full_name ||
-    log.user_username ||
-    log.causer?.FULL_NAME ||
-    log.causer?.USERNAME ||
-    'Système'
+    log.user_full_name || log.user_username || log.causer?.FULL_NAME || log.causer?.USERNAME || 'Système'
 
   return (
     <>
+      {/* ✅ Styles améliorés */}
+      <style>{`
+        .audit-card { border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.08); margin-top: 20px; }
+        .audit-table thead tr:first-child { position: sticky; top: 0; background: #f0f2f5; z-index: 5; }
+        .audit-table thead th { font-weight: 600; color: #2c3e50; font-size: 0.92rem; white-space: nowrap; }
+        .audit-table tbody tr:nth-child(even) { background: #fafafa; }
+        .audit-table tbody tr:hover { background: #eaf3ff; transition: 0.2s; }
+        .filters-row input {
+          width: 85%; padding: 5px 6px; font-size: 0.82rem;
+          border: 1px solid #ccc; border-radius: 6px; margin-left: 4px;
+        }
+        .btn-view { border-radius: 18px !important; font-size: 0.76rem; padding: 3px 12px; }
+        .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 16px 0; font-size: 0.9rem; }
+        .btn-nav { border-radius: 20px !important; padding: 6px 16px; font-size: 0.85rem; font-weight: 500; }
+        .audit-badge { padding: 4px 10px; font-size: 0.8rem; border-radius: 8px; }
+        .break-cell { white-space: normal; word-wrap: break-word; max-width: 250px; }
+      `}</style>
+
       <CautionHeader user={user} />
 
-      <div className="form-wrapper">
-        <div className="sage-form">
-          <div className="sage-form-header">
-            <div className="sage-form-header-left">
-              <span className="sage-form-title">Journal d’audit</span>
-            </div>
-            <div className="d-flex align-items-center gap-2">
-              <span className="me-2 small text-muted">Lignes&nbsp;:</span>
-              <select
-                className="form-select w-auto my-select"
-                value={perPage}
-                onChange={(e)=>{ setPerPage(Number(e.target.value)); fetchLogs(1) }}
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
+      <CCard className="audit-card">
+        {/* 🔹 Header de la carte avec select intégré */}
+        <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <h5 className="mb-0">📜 Journal d’audit</h5>
+          <div>
+            <label className="me-2 fw-bold">Lignes :</label>
+            <select
+              value={perPage}
+              onChange={(e) => {
+                setPerPage(Number(e.target.value))
+                fetchLogs(1)
+              }}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: '1px solid #bbb',
+                background: '#fff',
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
           </div>
+        </CCardHeader>
 
-          <div className="sage-section table-wrapper">
-            <CCard className="card border-0 shadow-none bg-transparent m-0">
-              <CCardHeader className="card-header d-none" />
-              <CCardBody className="p-0">
-
-                {error && <div className="alert alert-danger m-2">{error}</div>}
-
-                {loading ? (
-                  <div className="text-center p-4">
-                    <CSpinner />
-                  </div>
-                ) : (
-                  <div className="table-container">
-                    <CTable
-                      hover
-                      responsive
-                      className="table custom-table-style table-hover table-striped table-sm"
-                    >
-                      <CTableHead>
-                        {/* En-têtes */}
-                        <CTableRow className="main-header-row">
-                          <CTableHeaderCell className="col-subject">Numéro</CTableHeaderCell>
-                          <CTableHeaderCell className="col-user">Utilisateur</CTableHeaderCell>
-                          <CTableHeaderCell className="col-action">Action</CTableHeaderCell>
-                          <CTableHeaderCell className="col-model">Modèle</CTableHeaderCell>
-                          <CTableHeaderCell className="col-date">Date</CTableHeaderCell>
-                          <CTableHeaderCell className="col-details">Détails</CTableHeaderCell>
-                        </CTableRow>
-
-                        {/* Filtres */}
-                        <CTableRow className="filter-icon-row">
-                          <CTableHeaderCell className="filter-cell">
-                            <div className="filter-cell">
-                              <FaFilter className="filter-icon" />
-                              <input
-                                className="filter-input"
-                                placeholder="Numéro"
-                                value={filters.subject}
-                                onChange={(e)=>handleHeaderFilter('subject', e.target.value)}
-                              />
-                            </div>
-                          </CTableHeaderCell>
-
-                          <CTableHeaderCell className="filter-cell">
-                            <div className="filter-cell">
-                              <FaFilter className="filter-icon" />
-                              <input
-                                className="filter-input"
-                                placeholder="Utilisateur"
-                                value={filters.user}
-                                onChange={(e)=>handleHeaderFilter('user', e.target.value)}
-                              />
-                            </div>
-                          </CTableHeaderCell>
-
-                          <CTableHeaderCell className="filter-cell">
-                            <div className="filter-cell">
-                              <FaFilter className="filter-icon" />
-                              <input
-                                className="filter-input"
-                                placeholder="Action"
-                                value={filters.action}
-                                onChange={(e)=>handleHeaderFilter('action', e.target.value)}
-                              />
-                            </div>
-                          </CTableHeaderCell>
-
-                          <CTableHeaderCell className="filter-cell">
-                            <div className="filter-cell">
-                              <FaFilter className="filter-icon" />
-                              <input
-                                className="filter-input"
-                                placeholder="Modèle"
-                                value={filters.model}
-                                onChange={(e)=>handleHeaderFilter('model', e.target.value)}
-                              />
-                            </div>
-                          </CTableHeaderCell>
-
-                          <CTableHeaderCell className="filter-cell">
-                            <div className="filter-cell">
-                              <FaCalendarAlt className="filter-icon" />
-                              <input
-                                type="date"
-                                className="filter-input"
-                                value={filters.date}
-                                onChange={(e)=>handleHeaderFilter('date', e.target.value)}
-                              />
-                            </div>
-                          </CTableHeaderCell>
-
-                          <CTableHeaderCell className="filter-cell">
-                            <div className="filter-cell disabled">
-                              <FaFilter className="filter-icon" />
-                              <input className="filter-input" placeholder="—" disabled />
-                            </div>
-                          </CTableHeaderCell>
-                        </CTableRow>
-                      </CTableHead>
-
-                      <CTableBody>
-                        {logs.map((log) => (
-                          <CTableRow key={log.id}>
-                            <CTableDataCell className="text-truncate-1" title={log.subject_id}>
-                              <strong>{log.subject_id}</strong>
-                            </CTableDataCell>
-
-                            <CTableDataCell className="text-truncate-1" title={renderUser(log)}>
-                              {renderUser(log)}
-                            </CTableDataCell>
-
-                            <CTableDataCell>
-                              <CBadge color={actionColor(log.description)} className="px-2 py-1">
-                                {actionLabelFr(log.description)}
-                              </CBadge>
-                            </CTableDataCell>
-
-                            <CTableDataCell>
-                              <CBadge color="info" className="px-2 py-1">
-                                {renderModel(log)}
-                              </CBadge>
-                            </CTableDataCell>
-
-                            <CTableDataCell>
-                              <small className="text-muted">
-                                {new Date(log.created_at).toLocaleDateString('fr-FR')}
-                              </small>
-                            </CTableDataCell>
-
-                            <CTableDataCell>
-                              <CButton
-                                size="sm"
-                                variant="outline"
-                                className="my-btn"
-                                onClick={() => setSelectedLog(log)}
-                              >
-                                Voir
-                              </CButton>
-                            </CTableDataCell>
-                          </CTableRow>
-                        ))}
-
-                        {logs.length === 0 && (
-                          <CTableRow>
-                            <CTableDataCell colSpan="6" className="text-center text-muted py-4">
-                              Aucun journal trouvé.
-                            </CTableDataCell>
-                          </CTableRow>
-                        )}
-                      </CTableBody>
-                    </CTable>
-                  </div>
-                )}
-
-                <div className="d-flex justify-content-between align-items-center p-2">
-                  <CButton
-                    className="my-btn"
-                    variant="outline"
-                    disabled={pagination.current_page <= 1}
-                    onClick={() => fetchLogs(pagination.current_page - 1)}
-                  >
-                    Précédent
-                  </CButton>
-                  <span className="small text-muted">
-                    Page {pagination.current_page} sur {pagination.last_page}
-                  </span>
-                  <CButton
-                    className="my-btn"
-                    variant="outline"
-                    disabled={pagination.current_page >= pagination.last_page}
-                    onClick={() => fetchLogs(pagination.current_page + 1)}
-                  >
-                    Suivant
-                  </CButton>
-                </div>
-              </CCardBody>
-            </CCard>
-          </div>
-        </div>
-      </div>
-
-      <CModal visible={!!selectedLog} onClose={() => setSelectedLog(null)} size="lg">
-        <CModalHeader><CModalTitle>Détails du journal</CModalTitle></CModalHeader>
-        <CModalBody>
-          {selectedLog && (() => {
-            const oldVals = selectedLog.properties?.old ?? {}
-            const newVals = selectedLog.properties?.attributes ?? selectedLog.properties?.new ?? {}
-            const allKeys = Array.from(new Set([...Object.keys(oldVals), ...Object.keys(newVals)])).sort()
-
-            return (
-              <>
-                <p className="mb-1"><strong>Date :</strong> {new Date(selectedLog.created_at).toLocaleString('fr-FR')}</p>
-                <p className="mb-1"><strong>Utilisateur :</strong> {renderUser(selectedLog)}</p>
-                <p className="mb-1"><strong>Action :</strong> {actionLabelFr(selectedLog.description)}</p>
-                <p className="mb-1"><strong>Événement :</strong> {selectedLog.event || '—'}</p>
-                <p className="mb-3">
-                  <strong>Modèle :</strong> {renderModel(selectedLog)} &nbsp; | &nbsp;
-                  <strong>Numéro :</strong> {selectedLog.subject_id}
-                </p>
-
-                <h6 className="mb-2">Modifications</h6>
-                <CTable small responsive className="table custom-table-style table-sm">
-                  <CTableHead>
-                    <CTableRow className="main-header-row">
-                      <CTableHeaderCell style={{width:'30%'}}>Champ</CTableHeaderCell>
-                      <CTableHeaderCell style={{width:'35%'}}>Ancien</CTableHeaderCell>
-                      <CTableHeaderCell style={{width:'35%'}}>Nouveau</CTableHeaderCell>
+        <CCardBody>
+          {error && <div className="alert alert-danger">{error}</div>}
+          {loading ? (
+            <div className="text-center p-4">
+              <CSpinner color="primary" />
+            </div>
+          ) : (
+            <div style={{ maxHeight: 500, overflowY: 'auto' }}>
+              <CTable hover responsive className="audit-table">
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell>Numéro</CTableHeaderCell>
+                    <CTableHeaderCell>Utilisateur</CTableHeaderCell>
+                    <CTableHeaderCell>Action</CTableHeaderCell>
+                    <CTableHeaderCell>Modèle</CTableHeaderCell>
+                    <CTableHeaderCell>Date</CTableHeaderCell>
+                    <CTableHeaderCell>Détails</CTableHeaderCell>
+                  </CTableRow>
+                  <CTableRow className="filters-row">
+                    <CTableHeaderCell>
+                      <FaFilter />
+                      <input
+                        value={filters.subject}
+                        onChange={(e) => handleHeaderFilter('subject', e.target.value)}
+                        placeholder="Numéro"
+                      />
+                    </CTableHeaderCell>
+                    <CTableHeaderCell>
+                      <FaSearch />
+                      <input
+                        value={filters.user}
+                        onChange={(e) => handleHeaderFilter('user', e.target.value)}
+                        placeholder="Utilisateur"
+                      />
+                    </CTableHeaderCell>
+                    <CTableHeaderCell>
+                      <FaFilter />
+                      <input
+                        value={filters.action}
+                        onChange={(e) => handleHeaderFilter('action', e.target.value)}
+                        placeholder="Action"
+                      />
+                    </CTableHeaderCell>
+                    <CTableHeaderCell>
+                      <FaFilter />
+                      <input
+                        value={filters.model}
+                        onChange={(e) => handleHeaderFilter('model', e.target.value)}
+                        placeholder="Modèle"
+                      />
+                    </CTableHeaderCell>
+                    <CTableHeaderCell>
+                      <FaCalendarAlt />
+                      <input
+                        type="date"
+                        value={filters.date}
+                        onChange={(e) => handleHeaderFilter('date', e.target.value)}
+                      />
+                    </CTableHeaderCell>
+                    <CTableHeaderCell />
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {logs.map((log) => (
+                    <CTableRow key={log.id}>
+                      <CTableDataCell className="break-cell">
+                        <strong>{log.subject_id}</strong>
+                      </CTableDataCell>
+                      <CTableDataCell className="break-cell">{renderUser(log)}</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge className="audit-badge" color={actionColor(log.description)}>
+                          {actionLabelFr(log.description)}
+                        </CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color="info" className="audit-badge">
+                          {renderModel(log)}
+                        </CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <small>{new Date(log.created_at).toLocaleDateString('fr-FR')}</small>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CButton
+                          size="sm"
+                          variant="outline"
+                          className="btn-view"
+                          onClick={() => setSelectedLog(log)}
+                        >
+                          Voir
+                        </CButton>
+                      </CTableDataCell>
                     </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {allKeys.length === 0 && (
+                  ))}
+                  {logs.length === 0 && (
+                    <CTableRow>
+                      <CTableDataCell colSpan="6" className="text-center text-muted py-4">
+                        Aucun journal trouvé.
+                      </CTableDataCell>
+                    </CTableRow>
+                  )}
+                </CTableBody>
+              </CTable>
+            </div>
+          )}
+
+          {/* 🔹 Pagination */}
+          <div className="pagination-bar">
+            <CButton
+              className="btn-nav"
+              variant="outline"
+              disabled={pagination.current_page <= 1}
+              onClick={() => fetchLogs(pagination.current_page - 1)}
+            >
+              ◀ Précédent
+            </CButton>
+            <span>
+              Page {pagination.current_page} / {pagination.last_page}
+            </span>
+            <CButton
+              className="btn-nav"
+              variant="outline"
+              disabled={pagination.current_page >= pagination.last_page}
+              onClick={() => fetchLogs(pagination.current_page + 1)}
+            >
+              Suivant ▶
+            </CButton>
+          </div>
+        </CCardBody>
+      </CCard>
+
+      {/* 🔹 Modal détails */}
+      <CModal visible={!!selectedLog} onClose={() => setSelectedLog(null)} size="lg">
+        <CModalHeader>
+          <CModalTitle>Détails du journal</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          {selectedLog &&
+            (() => {
+              const oldVals = selectedLog.properties?.old ?? {}
+              const newVals =
+                selectedLog.properties?.attributes ?? selectedLog.properties?.new ?? {}
+              const allKeys = Array.from(
+                new Set([...Object.keys(oldVals), ...Object.keys(newVals)]),
+              ).sort()
+              return (
+                <>
+                  <p>
+                    <strong>Date :</strong>{' '}
+                    {new Date(selectedLog.created_at).toLocaleString('fr-FR')}
+                  </p>
+                  <p>
+                    <strong>Utilisateur :</strong> {renderUser(selectedLog)}
+                  </p>
+                  <p>
+                    <strong>Action :</strong> {actionLabelFr(selectedLog.description)}
+                  </p>
+                  <p>
+                    <strong>Modèle :</strong> {renderModel(selectedLog)} |{' '}
+                    <strong>Numéro :</strong> {selectedLog.subject_id}
+                  </p>
+                  <h6 className="mt-3">Modifications</h6>
+                  <CTable small responsive>
+                    <CTableHead>
                       <CTableRow>
-                        <CTableDataCell colSpan={3} className="text-center text-muted">Aucune différence.</CTableDataCell>
+                        <CTableHeaderCell>Champ</CTableHeaderCell>
+                        <CTableHeaderCell>Ancien</CTableHeaderCell>
+                        <CTableHeaderCell>Nouveau</CTableHeaderCell>
                       </CTableRow>
-                    )}
-                    {allKeys.map((k) => (
-                      <CTableRow key={k}>
-                        <CTableDataCell><code>{k}</code></CTableDataCell>
-                        <CTableDataCell>{showVal(oldVals[k])}</CTableDataCell>
-                        <CTableDataCell>{showVal(newVals[k])}</CTableDataCell>
-                      </CTableRow>
-                    ))}
-                  </CTableBody>
-                </CTable>
-              </>
-            )
-          })()}
+                    </CTableHead>
+                    <CTableBody>
+                      {allKeys.length === 0 && (
+                        <CTableRow>
+                          <CTableDataCell colSpan={3} className="text-center">
+                            Aucune différence
+                          </CTableDataCell>
+                        </CTableRow>
+                      )}
+                      {allKeys.map((k) => (
+                        <CTableRow key={k}>
+                          <CTableDataCell>
+                            <code>{k}</code>
+                          </CTableDataCell>
+                          <CTableDataCell className="break-cell">
+                            {showVal(oldVals[k])}
+                          </CTableDataCell>
+                          <CTableDataCell className="break-cell">
+                            {showVal(newVals[k])}
+                          </CTableDataCell>
+                        </CTableRow>
+                      ))}
+                    </CTableBody>
+                  </CTable>
+                </>
+              )
+            })()}
         </CModalBody>
       </CModal>
     </>
   )
 }
-
 export default Audit

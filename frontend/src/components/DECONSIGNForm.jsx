@@ -11,6 +11,7 @@ import api from "../utils/api";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
+import { useMemo } from "react"; // you already import React, but ensure useMemo is available
 
 // Dynamic schema based on mode: create, view (read-only), or edit, and user role
 const createValidationSchema = (isEditMode, isReadOnly, userRole) => {
@@ -168,6 +169,9 @@ const DECONSIGNForm = forwardRef(
       reset,
       getValues,
       setValue,
+      setError, 
+      clearErrors,
+      watch,
       formState: { errors },
     } = useForm({
       resolver: yupResolver(
@@ -186,6 +190,8 @@ const DECONSIGNForm = forwardRef(
       },
       mode: "onChange", // Validate on change to catch issues early
     });
+const watchedClient = watch("xclient_0");
+ const watchedSite   = watch("xsite_0");
 
     // State for date and time
     const [currentDate, setCurrentDate] = useState("");
@@ -222,6 +228,31 @@ const DECONSIGNForm = forwardRef(
     // State for solde information
     const [currentSolde, setCurrentSolde] = useState(null);
     const [isLoadingSolde, setIsLoadingSolde] = useState(false);
+// Map client code -> raison/name for quick lookups
+const clientsByCode = useMemo(() => {
+  const map = {};
+  for (const c of (clients || [])) {
+    const code = String(c.client_code || "").trim().toUpperCase();
+    const raison = c.raison_sociale || c.client_name || "";
+    if (code) map[code] = { ...c, raison };
+  }
+  return map;
+}, [clients]);
+
+// Keep xraison_0 in sync when xclient_0 changes
+useEffect(() => {
+  const code = String(watchedClient || "").trim().toUpperCase();
+  const c = clientsByCode[code];
+  const auto = c ? (c.raison_sociale || c.client_name || c.raison || "") : "";
+
+  // Only write when we actually have a non-empty auto value
+  if (auto) {
+    const current = (getValues("xraison_0") || "").trim();
+    if (current !== auto) {
+      setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
+    }
+  }
+}, [clientsByCode, watchedClient, setValue, getValues]);
 
     useEffect(() => {
       if (initialData) {
@@ -280,6 +311,17 @@ const DECONSIGNForm = forwardRef(
         );
       }
     }, [initialData, reset]);
+
+    useEffect(() => {
+  if (!initialData) return;
+  const pre =
+    initialData.xraison_0 ||
+    initialData.customer?.raison_sociale ||
+    "";
+  if (pre) {
+    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
+  }
+}, [initialData, setValue]);
 
     // Separate useEffect to handle form reset after dropdown data is loaded
     useEffect(() => {
@@ -381,10 +423,7 @@ const DECONSIGNForm = forwardRef(
       }
     };
 
-    // Watch for changes in client and site to fetch solde
-    const watchedClient = getValues("xclient_0");
-    const watchedSite = getValues("xsite_0");
-
+    
     // Effect to fetch solde when client and site change
     useEffect(() => {
       if (watchedClient && watchedSite && !initialData) {
@@ -764,10 +803,7 @@ const DECONSIGNForm = forwardRef(
     };
 
     // Helper function to handle integer input (remove non-digits)
-    const handleIntegerInput = (e) => {
-      e.preventDefault();
-      return e.target.value.replace(/[^\d]/g, "");
-    };
+    const handleIntegerInput = (e) => e.target.value.replace(/[^\d]/g, "");
 
     // Helper for focus border and edit mode styling
     const getInputClass = (name) => {
@@ -806,72 +842,73 @@ const DECONSIGNForm = forwardRef(
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
       >
-        <div className="sage-form-header">
-          <div className="sage-form-header-left">
-            <FaArrowLeft className="sage-nav-arrow" />
-            <FaArrowRight className="sage-nav-arrow" />
-            <span className="sage-form-title">
-              {isEditMode ? "Modification de Déconsignation" : "Déconsignation"}
-            </span>
-            {isEditMode && (
-              <span
-                style={{
-                  marginLeft: "10px",
-                  fontSize: "0.65rem",
-                  color: "#ff9800",
-                  fontWeight: "normal",
-                }}
-              >
-                (Seuls Matricule et Palettes modifiables)
+  <div className="form-scrollable" style={{minHeight: '60vh', overflowY: 'visible', paddingRight: 8}}>
+          <div className="sage-form-header">
+            <div className="sage-form-header-left">
+              <FaArrowLeft className="sage-nav-arrow" />
+              <FaArrowRight className="sage-nav-arrow" />
+              <span className="sage-form-title">
+                {isEditMode ? "Modification de Déconsignation" : "Déconsignation"}
               </span>
-            )}
+              {isEditMode && (
+                <span
+                  style={{
+                    marginLeft: "10px",
+                    fontSize: "0.65rem",
+                    color: "#ff9800",
+                    fontWeight: "normal",
+                  }}
+                >
+                  (Seuls Matricule et Palettes modifiables)
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                type="button"
+                className="sage-validation-btn"
+                onClick={handleValidationClick}
+                style={
+                  currentValidationStatus === "1" &&
+                  canUserValidate &&
+                  userRole !== "CHEF_PARC"
+                    ? {
+                        backgroundColor: "#0866ff",
+                        color: "#fff",
+                        cursor: "pointer",
+                        opacity: 1,
+                      }
+                    : {
+                        backgroundColor: "#d3d3d3", // Gray background
+                        color: "#888", // Gray text
+                        opacity: 0.6,
+                        cursor: "not-allowed",
+                      }
+                }
+                disabled={
+                  currentValidationStatus === "2" ||
+                  !canUserValidate ||
+                  userRole === "CHEF_PARC"
+                }
+              >
+                Validation
+              </button>
+              <FaSignOutAlt className="caution-header-icon" />
+            </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <button
-              type="button"
-              className="sage-validation-btn"
-              onClick={handleValidationClick}
-              style={
-                currentValidationStatus === "1" &&
-                canUserValidate &&
-                userRole !== "CHEF_PARC"
-                  ? {
-                      backgroundColor: "#0866ff",
-                      color: "#fff",
-                      cursor: "pointer",
-                      opacity: 1,
-                    }
-                  : {
-                      backgroundColor: "#d3d3d3", // Gray background
-                      color: "#888", // Gray text
-                      opacity: 0.6,
-                      cursor: "not-allowed",
-                    }
-              }
-              disabled={
-                currentValidationStatus === "2" ||
-                !canUserValidate ||
-                userRole === "CHEF_PARC"
-              }
-            >
-              Validation
-            </button>
-            <FaSignOutAlt className="caution-header-icon" />
-          </div>
-        </div>
-        <div className="sage-section">
-          <div className="sage-section-title">
-            <span className="sage-section-icon">&#8962;</span> Général
-          </div>
-          <div className="sage-fields">
-            <div className="sage-row">
-              <label>Bon de Déconsignation</label>
-              <input
-                type="text"
-                {...register("xnum_0")}
-                disabled
-                className="sage-input"
-                value={initialData?.xnum_0 || ""}
+          <div className="sage-section">
+            <div className="sage-section-title">
+              <span className="sage-section-icon">&#8962;</span> Général
+            </div>
+            <div className="sage-fields">
+              <div className="sage-row">
+                <label>N° de Bon</label>
+                <input
+                  type="text"
+                  {...register("xnum_0")}
+                  disabled
+                  className="sage-input"
+                  value={initialData?.xnum_0 || ""}
                 tabIndex={-1}
               />
             </div>{" "}
@@ -982,113 +1019,66 @@ const DECONSIGNForm = forwardRef(
               />
             </div>{" "}
             <div className="sage-row">
-              <label>
-                Client <span className="sage-required">*</span>
-              </label>
-              <AutocompleteInput
-                options={clients.map((client) => ({
-                  id: client.id?.toString() || "",
-                  code: client.client_code || "",
-                  name: client.client_name || client.raison_sociale || "",
-                  // Store the original client data for auto-fill
-                  originalClient: client,
-                }))}
-                value={getValues("xclient_0")}
-                onChange={(e) => {
-                  const selectedValue = e.target.value;
-                  setClientHasBeenTouched(true);
+  <label>
+    Client <span className="sage-required">*</span>
+  </label>
 
-                  setValue("xclient_0", selectedValue, {
-                    shouldValidate: true,
-                  });
+  <input
+    type="text"
+    {...register("xclient_0")}
+    value={getValues("xclient_0")}
+    onChange={(e) => {
+      const v = e.target.value.trim().toUpperCase();
+      setClientHasBeenTouched(true);
+      setValue("xclient_0", v, { shouldValidate: true });
 
-                  // Validate if the entered value matches any client code
-                  if (selectedValue === "") {
-                    setIsClientValid(true); // Empty is not invalid, just not filled
-                  } else {
-                    const matchingClient = clients.find(
-                      (client) => client.client_code === selectedValue
-                    );
-                    setIsClientValid(matchingClient !== undefined);
-                  }
+      if (!isEditMode && !isReadOnly) {
+        if (v === "") {
+          clearErrors("xclient_0"); // let Yup handle "required" on submit
+        } else {
+          const ok = !!clientsByCode[v];
+          if (ok) clearErrors("xclient_0");
+          else setError("xclient_0", { type: "manual", message: "Client introuvable" });
+        }
+      }
+    }}
+    onBlur={() => {
+      setFocusField("");
+      setClientHasBeenTouched(true);
+      const v = (getValues("xclient_0") || "").trim().toUpperCase();
+      if (!isEditMode && !isReadOnly && v !== "") {
+        const ok = !!clientsByCode[v];
+        if (ok) clearErrors("xclient_0");
+        else setError("xclient_0", { type: "manual", message: "Client introuvable" });
+      }
+    }}
+    onFocus={() => setFocusField("xclient_0")}
+    autoComplete="off"
+    disabled={isReadOnly || isEditMode}
+    className={getInputClass("xclient_0")}
+  />
 
-                  // Auto-populate raison sociale when client is selected (only in create mode)
-                  if (!initialData) {
-                    const selectedClient = clients.find(
-                      (client) => client.client_code === selectedValue
-                    );
-                    if (selectedClient) {
-                      setValue(
-                        "xraison_0",
-                        selectedClient.raison_sociale ||
-                          selectedClient.client_name ||
-                          ""
-                      );
-                    } else {
-                      setValue("xraison_0", "");
-                    }
-                  }
-                }}
-                disabled={isReadOnly || isEditMode || userRole === "CHEF_PARC"}
-                className={
-                  getInputClass("xclient_0") +
-                  (clientHasBeenTouched &&
-                  !isClientValid &&
-                  !isEditMode &&
-                  !isReadOnly
-                    ? " sage-input-error"
-                    : "")
-                }
-                onFocus={() => setFocusField("xclient_0")}
-                onBlur={() => {
-                  setFocusField("");
-                  setClientHasBeenTouched(true);
+  {errors.xclient_0 && (
+    <span className="sage-input-error-text">{errors.xclient_0.message}</span>
+  )}
+</div>
 
-                  // Validate client when field loses focus
-                  const currentClientValue = getValues("xclient_0");
-                  if (!isEditMode && !isReadOnly) {
-                    if (currentClientValue === "") {
-                      setIsClientValid(true); // Empty is not invalid, just not filled
-                    } else {
-                      const matchingClient = clients.find(
-                        (client) => client.client_code === currentClientValue
-                      );
-                      setIsClientValid(matchingClient !== undefined);
-                    }
-                  }
-                }}
-                register={register("xclient_0")}
-                searchKeys={["code", "name"]}
-                displayKeys={["code", "name"]}
-                primaryKey="code"
-                noResultsText="Client introuvable"
-              />
-            </div>
-            <div className="sage-row">
-              <label>Raison sociale</label>
-              <AutocompleteInput
-                options={clients.map((client) => ({
-                  id: client.id?.toString() || "",
-                  code: client.raison_sociale || client.client_name || "",
-                  name: client.raison_sociale || client.client_name || "",
-                }))}
-                value={getValues("xraison_0")}
-                onChange={(e) =>
-                  setValue("xraison_0", e.target.value, {
-                    shouldValidate: true,
-                  })
-                }
-                disabled={initialData || isLoadingDropdowns}
-                className={getInputClass("xraison_0")}
-                onFocus={() => setFocusField("xraison_0")}
-                onBlur={() => setFocusField("")}
-                register={register("xraison_0")}
-                searchKeys={["code", "name"]}
-                displayKeys={["code"]}
-                primaryKey="code"
-                noResultsText="Aucune raison sociale trouvée"
-              />
-            </div>
+              <div className="sage-row">
+  <label>Raison sociale</label>
+
+  {/* Visible, read-only value (auto-filled by the effect) */}
+  <input
+    type="text"
+    readOnly
+    value={watch("xraison_0") || ""}
+    className={getInputClass("xraison_0") + " read-only"}
+    tabIndex={-1}
+  />
+
+  {/* Hidden to keep the value in RHF form state */}
+  <input type="hidden" {...register("xraison_0")} />
+</div>
+
             <div className="sage-row">
               <label>
                 Transporteur externe ? <span className="sage-required">*</span>
@@ -1376,6 +1366,7 @@ const DECONSIGNForm = forwardRef(
               />
             </div>
           </div>
+        </div> <br></br>  
         </div>
       </form>
     );
@@ -1383,3 +1374,10 @@ const DECONSIGNForm = forwardRef(
 );
 
 export default DECONSIGNForm;
+
+// Ajout CSS local pour le scroll si non déjà présent
+// À placer dans le fichier CSS importé ou en style inline :
+// .form-scrollable { max-height: 75vh; overflow-y: auto; padding-right: 8px; }
+
+// Pour appliquer le scroll, entourez le contenu du formulaire par :
+// <div className="form-scrollable"> ...formulaire... </div>

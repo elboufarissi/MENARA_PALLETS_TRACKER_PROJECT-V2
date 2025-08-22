@@ -1,5 +1,20 @@
+
+body {
+  font-family: 'Dax-Light', Arial, sans-serif;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
 .App {
   text-align: center;
+}
+
+h1, .title, .dax-bold {
+  font-family: 'Dax-Bold', Arial Black, Arial, sans-serif;
+}
+
+h2, h3, h4, h5, h6, .subtitle, .dax-medium {
+  font-family: 'Dax-Medium', Arial, sans-serif;
 }
 
 .App-logo {
@@ -46,6 +61,8 @@
 /* Ensure the split panes take up the full height */
 .w-split {
   height: 100% !important;
+  min-height: 100vh;
+  overflow: hidden !important;
 }
 
 /* Style the split bar */

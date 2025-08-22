@@ -36,10 +36,16 @@
   padding: 0.7rem;
 }
 
+
 .form-row-custom {
   display: flex;
   align-items: center;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.7rem;
+  gap: 0.5rem;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px #f3f3f3;
+  padding: 0.5rem 0.5rem;
 }
 
 .form-row-custom label {
@@ -315,24 +321,26 @@ h6 {
 .sage-fields {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.7rem 0.7rem 0.2rem 0.7rem;
+  gap: 0.08rem;
+  padding: 0.18rem 0.18rem 0.04rem 0.18rem;
 }
 
 .sage-row {
+  border-bottom: 2px solid #fff;
   display: flex;
   align-items: center;
-  margin-bottom: 0.18rem;
-  gap: 0.5rem;
+  margin-bottom: 0.04rem;
+  gap: 0.12rem;
 }
 
 .sage-row label {
-  width: 110px;
+  width: 140px;
   font-weight: 500;
-  text-align: right;
-  font-size: 0.93rem;
+  text-align: left;
+  font-size: 0.87rem;
   color: #222;
-  margin-right: 8px;
+  margin-right: 2px;
+  white-space: nowrap;
 }
 
 .sage-input,
@@ -359,20 +367,6 @@ h6 {
 
 .sage-input:disabled + .sage-input-icon {
   color: #ccc;
-  opacity: 0.5;
-}
-
-.sage-fields select:disabled {
-  background: #f4f6f8 !important;
-  color: #000 !important;
-  cursor: not-allowed !important;
-  opacity: 1;
-}
-
-/* Edit mode overrides: non-editable sage fields should have gray text */
-.sage-form.edit-mode .sage-input:disabled {
-  color: #888 !important;
-  opacity: 0.8 !important;
 }
 
 .sage-form.edit-mode .sage-fields select:disabled {
