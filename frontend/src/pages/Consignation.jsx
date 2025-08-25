@@ -60,6 +60,29 @@ export default function Consignation() {
     fetchData();
   }, [xnum_0]);
 
+
+  // put this inside the Consignation component, near the top
+useEffect(() => {
+  const token = localStorage.getItem("token") || user?.api_token;
+  if (!token) return;
+
+  // 1) make sure axios instance uses the token (like delete does)
+  api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+  // 2) also patch fetch so form calls (if using fetch) include the token
+  const origFetch = window.fetch;
+  window.fetch = (input, init = {}) => {
+    const headers = new Headers(init?.headers || {});
+    if (!headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    return origFetch(input, { ...init, headers });
+  };
+
+  // cleanup on unmount/hot reload
+  return () => { window.fetch = origFetch; };
+}, [user]);
+
   const handleFormSuccess = () => {
     console.log("Form submission successful, refetching consignations...");
     fetchConsignations();

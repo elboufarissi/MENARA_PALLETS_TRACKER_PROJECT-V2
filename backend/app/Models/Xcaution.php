@@ -1,14 +1,21 @@
-<?php // backend/app/Models/Xcaution.php
+<?php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Models\Activity;
 
 class Xcaution extends Model
 {
+    use HasFactory, LogsActivity;
+
     protected $table = 'xcautions';
     protected $primaryKey = 'xnum_0';
     public $incrementing = false;
@@ -40,142 +47,69 @@ class Xcaution extends Model
         'xvalsta_0' => 1, // 1 = Non validé
     ];
 
+    // --- Spatie Activitylog (mirror of Deconsignation style) ---
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('caution')
+            ->logOnly([
+                'xnum_0','xsite_0','xclient_0','xraison_0','xcin_0',
+                'xdate_0','xheure_0','xvalsta_0','montant',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
+    public function getDescriptionForEvent(string $eventName): string
+    {
+        return "xcaution_{$eventName}";
+    }
+
+    // Ensure causer is the authenticated user (same trick you used elsewhere)
+    public function tapActivity(Activity $activity, string $event): void
+    {
+        if (!$activity->causer_id) {
+            if (Auth::check()) {
+                $activity->causer()->associate(Auth::user());
+            } elseif ($u = request()->user()) {
+                $activity->causer()->associate($u);
+            }
+        }
+    }
+
+    // --- Model boot: keep IDs & user columns; remove manual activity()->... ---
     protected static function boot()
     {
         parent::boot();
 
-        // ----- creating: id/uuid + creator -----
-        static::creating(function ($model) {
+        // creating: xnum_0 / auuid / creusr,updusr
+        static::creating(function (self $model) {
             if (empty($model->{$model->getKeyName()})) {
-                $model->{$model->getKeyName()} =
-                    $model->{$model->getKeyName()} ?? $model->generateCautionNumber();
+                $model->{$model->getKeyName()} = $model->generateCautionNumber();
             }
             if (empty($model->auuid)) {
                 $model->auuid = (string) Str::uuid();
             }
-
             if ($u = (Auth::user() ?: request()->user())) {
                 $model->creusr = $model->creusr ?? $u->getKey();
                 $model->updusr = $model->updusr ?? $u->getKey();
             }
         });
 
-        // helper: only log fillable (minus timestamps)
-        $onlyLoggable = static function ($model, array $data) {
-            $fillable = array_flip($model->getFillable());
-            $data = array_intersect_key($data, $fillable);
-            unset($data['created_at'], $data['updated_at']);
-            return $data;
-        };
-
-        // ----- created: activity + optional balance -----
-        static::created(function ($model) use ($onlyLoggable) {
-            $attrs = $onlyLoggable($model, $model->getAttributes());
-
-            $log = activity()->useLog('caution')
-                ->event('created')
-                ->performedOn($model)
-                ->withProperties(['attributes' => $attrs]);
-
-            if ($u = (Auth::user() ?: request()->user())) {
-                $log->causedBy($u);
-            }
-
-            Log::info('[Xcaution] created', [
-                'xnum_0'    => $model->xnum_0,
-                'causer_id' => optional(Auth::user())->getKey(),
-                'causer_set'=> (bool) Auth::user(),
-            ]);
-
-            $log->log('xcaution_created');
-
-            // Balance recalc if already validated
-            if ((int) $model->xvalsta_0 === 2) {
-                try {
-                    \App\Models\Csolde::recalculateBalance($model->xclient_0, $model->xsite_0);
-                    Log::info('[Xcaution] balance recalculated (created)', [
-                        'client' => $model->xclient_0, 'site' => $model->xsite_0,
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::error('[Xcaution] recalc (created) failed: '.$e->getMessage());
-                }
-            }
-        });
-
-        // ----- updating: set updusr -----
-        static::updating(function ($model) {
+        // updating: updusr
+        static::updating(function (self $model) {
             if ($u = (Auth::user() ?: request()->user())) {
                 $model->updusr = $u->getKey();
             }
         });
 
-        // ----- updated: activity + conditional balance -----
-        static::updated(function ($model) use ($onlyLoggable) {
-            $changes = $model->getChanges();
-            if (count($changes) === 1 && array_key_exists('updated_at', $changes)) {
-                return; // ignore noise
-            }
-
-            $old = $onlyLoggable($model, array_intersect_key($model->getOriginal(), $changes));
-            $new = $onlyLoggable($model, $changes);
-
-            $log = activity()->useLog('caution')
-                ->event('updated')
-                ->performedOn($model)
-                ->withProperties(['old' => $old, 'new' => $new]);
-
-            if ($u = (Auth::user() ?: request()->user())) {
-                $log->causedBy($u);
-            }
-
-            Log::info('[Xcaution] updated', [
-                'xnum_0'      => $model->xnum_0,
-                'changed'     => array_keys($changes),
-                'causer_id'   => optional(Auth::user())->getKey(),
-                'status_from' => $model->getOriginal('xvalsta_0'),
-                'status_to'   => $model->xvalsta_0,
-            ]);
-
-            $log->log('xcaution_updated');
-
-            // Recalc if status changed OR already validated
-            $from = (int) $model->getOriginal('xvalsta_0');
-            $to   = (int) $model->xvalsta_0;
-            if ($from !== $to || $to === 2) {
-                try {
-                    \App\Models\Csolde::recalculateBalance($model->xclient_0, $model->xsite_0);
-                    Log::info('[Xcaution] balance recalculated (updated)', [
-                        'client' => $model->xclient_0, 'site' => $model->xsite_0,
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::error('[Xcaution] recalc (updated) failed: '.$e->getMessage());
-                }
-            }
-        });
-
-        // ----- deleted: activity -----
-        static::deleted(function ($model) use ($onlyLoggable) {
-            $attrs = $onlyLoggable($model, $model->getOriginal());
-
-            $log = activity()->useLog('caution')
-                ->event('deleted')
-                ->performedOn($model)
-                ->withProperties(['attributes' => $attrs]);
-
-            if ($u = (Auth::user() ?: request()->user())) {
-                $log->causedBy($u);
-            }
-
-            Log::info('[Xcaution] deleted', [
-                'xnum_0'    => $model->xnum_0,
-                'causer_id' => optional(Auth::user())->getKey(),
-            ]);
-
-            $log->log('xcaution_deleted');
-        });
+        // NOTE: We intentionally do NOT do any manual activity()->log() calls
+        // here; the LogsActivity trait handles created/updated/deleted logs.
+        // If you need balance recalcs on state changes, do them in observers
+        // or controllers after saving, not by logging again here.
     }
 
-    private function generateCautionNumber()
+    private function generateCautionNumber(): string
     {
         $date  = now();
         $year  = $date->format('y');
@@ -192,15 +126,14 @@ class Xcaution extends Model
             $seq = (int) $m[1] + 1;
         }
 
-        return sprintf('CT%s%s%s%s-%04d',
-            $this->xsite_0, $year, $month, $day, $seq
-        );
+        return sprintf('CT%s%s%s%s-%04d', $this->xsite_0, $year, $month, $day, $seq);
     }
 
     // Relations
     public function facility()
     {
         return $this->belongsTo(Facility::class, 'xsite_0', 'FCY_0');
+        // keep your FK as used elsewhere; change to 'FCY_0' if that's your Facility PK
     }
 
     public function customer()

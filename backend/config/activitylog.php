@@ -12,7 +12,9 @@ return [
     'default_log_name' => env('ACTIVITY_LOGGER_DEFAULT_LOG_NAME', 'default'),
 
     // Auth driver (null = use Laravel default)
-    'default_auth_driver' => null,
+    // was: 'default_auth_driver' => null,
+'default_auth_driver' => 'api',
+
 
     // Whether subject() returns soft-deleted models
     'subject_returns_soft_deleted_models' => false,

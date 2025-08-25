@@ -6,7 +6,7 @@ import api from "../utils/api";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
-
+import LoadingOverlay from "../components/LoadingOverlay";
 // Dynamic schema based on mode: create, view (read-only), or edit
 const createValidationSchema = (isEditMode, isReadOnly) => {
   if (isReadOnly) {
@@ -112,6 +112,8 @@ const DepotCautionForm = forwardRef(
   formState: { errors },
 } = useForm({
       resolver: yupResolver(createValidationSchema(isEditMode, isReadOnly)),
+      mode: "onBlur",        // 👈 validation seulement au blur
+  reValidateMode: "onBlur", // 👈 revalidation seulement au blur
       defaultValues: {
         xvalsta_0: "1", // Default to 1 (Non)
         xnum_0: "",
@@ -149,7 +151,9 @@ const DepotCautionForm = forwardRef(
     const [cinHasBeenTouched, setCinHasBeenTouched] = useState(false);
     const [montantHasBeenTouched, setMontantHasBeenTouched] = useState(false);
     const clientsReady = !isLoadingDropdowns && clients.length > 0;
+    const [isClientLoading, setIsClientLoading] = useState(false); //  état pour le blur
 
+    
     useEffect(() => {
       if (initialData) {
         // Update validation status
@@ -264,30 +268,45 @@ useEffect(() => {
     setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
   }
 }, [initialData, setValue]);
+useEffect(() => {
+  if (!initialData) return;
+  const pre = initialData.xraison_0 || "";
+  if (pre) {
+    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
+  }
+}, [initialData, setValue]);
 
 // Watch the typed client code
 const watchedClientCode = watch("xclient_0");
 
 // Keep raison sociale & CIN auto in sync with client code
+// Keep raison sociale & CIN auto in sync with client code
+// Keep raison sociale & CIN auto in sync with client code
 useEffect(() => {
   const code = String(watchedClientCode || "").trim().toUpperCase();
   const client = clientsByCode[code];
 
-  // keep raison in sync (guarded)
+  // --- Raison sociale sync ---
   const autoRaison = client ? (client.raison_sociale || client.client_name || "") : "";
   if (autoRaison) {
     const current = (getValues("xraison_0") || "").trim();
     if (current !== autoRaison) {
-      setValue("xraison_0", autoRaison, { shouldValidate: false, shouldDirty: true });
+      setValue("xraison_0", autoRaison, {
+        shouldValidate: false,
+        shouldDirty: true,
+      });
     }
   }
 
-  // 🔒 Only show “introuvable” once clients are loaded
+  // --- Client validation ---
   if (code === "") {
     clearErrors("xclient_0");
   } else if (!client) {
     if (clientsReady) {
-      setError("xclient_0", { type: "manual", message: "Client introuvable" });
+      setError("xclient_0", {
+        type: "manual",
+        message: "Client introuvable",
+      });
     } else {
       clearErrors("xclient_0"); // suppress flicker while loading
     }
@@ -295,12 +314,17 @@ useEffect(() => {
     clearErrors("xclient_0");
   }
 
-  // CIN hydration (unchanged)
+  // --- CIN hydration ---
   if (client) {
     api
       .get(`/xcaution/cin-by-client/${code}`)
-      .then((res) => setValue("xcin_0", (res.data?.xcin_0 || "").toUpperCase(), { shouldValidate: false }))
-      .catch(() => setValue("xcin_0", "", { shouldValidate: true }));
+      .then((res) => {
+        const cin = (res.data?.xcin_0 || "").toUpperCase();
+        setValue("xcin_0", cin, { shouldValidate: false });
+      })
+      .catch(() => {
+        setValue("xcin_0", "", { shouldValidate: true });
+      });
   } else if (clientsReady) {
     // only clear when we definitively know it's not a client
     setValue("xcin_0", "", { shouldValidate: false });
@@ -308,11 +332,11 @@ useEffect(() => {
 }, [
   watchedClientCode,
   clientsByCode,
+  clientsReady,
   setValue,
+  getValues,
   setError,
   clearErrors,
-  getValues,
-  clientsReady,     // 👈 add this dep
 ]);
 
 
@@ -801,7 +825,9 @@ useEffect(() => {
         className={`sage-form ${
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
+        style={{ position: "relative" }}
       >
+         <LoadingOverlay show={isClientLoading} text="Chargement en cours..." />
         <div className="sage-form-header">
           <div className="sage-form-header-left">
             <FaArrowLeft className="sage-nav-arrow" />
@@ -969,35 +995,53 @@ useEffect(() => {
                 noResultsText="Site introuvable"
               />
             </div>{" "}
-            <div className="sage-row">
+           
+ <div className="sage-row" style={{ position: "relative" }}>
   <label>
     Client <span className="sage-required">*</span>
   </label>
-  <input
-    type="text"
-    {...register("xclient_0")}
-    value={getValues("xclient_0")}
-    onChange={(e) => {
-      // force uppercase & trim
-      const v = e.target.value.trim().toUpperCase();
-      setValue("xclient_0", v, { shouldValidate: true });
-      // live validation moved into the effect; keep the UX snappy
-    }}
-    onBlur={() => {
-      const v = (getValues("xclient_0") || "").trim().toUpperCase();
-      if (v && !clientsByCode[v]) {
-        setError("xclient_0", { type: "manual", message: "Client introuvable" });
+  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+    <input
+      type="text"
+      {...register("xclient_0")}
+      value={getValues("xclient_0")}
+      onChange={(e) => {
+        const v = e.target.value.trim().toUpperCase();
+        setValue("xclient_0", v, { shouldValidate: false });
+
+        if (window.clientTimeout) clearTimeout(window.clientTimeout);
+        setIsClientLoading(true); // active blur
+        window.clientTimeout = setTimeout(() => {
+          const finalValue = (getValues("xclient_0") || "").trim().toUpperCase();
+          if (finalValue && !clientsByCode[finalValue]) {
+            setError("xclient_0", {
+              type: "manual",
+              message: "Client introuvable",
+            });
+          } else {
+            clearErrors("xclient_0");
+          }
+          setIsClientLoading(false); // désactive blur
+        }, 1000);
+      }}
+      autoComplete="off"
+      disabled={!!initialData && !isEditMode}
+      className={
+        getInputClass("xclient_0") +
+        (errors.xclient_0 ? " sage-input-error" : "")
       }
-    }}
-    onFocus={() => {/* optional focus styling already handled by getInputClass */}}
-    autoComplete="off"
-    disabled={!!initialData && !isEditMode}
-    className={getInputClass("xclient_0")}
-  />
-  {errors.xclient_0 && (
-    <span className="sage-input-error-text">{errors.xclient_0.message}</span>
-  )}
+    />
+
+    {errors.xclient_0 && (
+      <span className="client-autocomplete-no-results">
+        {errors.xclient_0.message}
+      </span>
+    )}
+  </div>
 </div>
+
+
+
 
             <div className="sage-row">
   <label>Raison sociale</label>

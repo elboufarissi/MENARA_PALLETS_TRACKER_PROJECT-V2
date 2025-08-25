@@ -7,6 +7,8 @@ import DetailsClientOperations from "../components/DetailsClientOperations";
 import "../components/SituationClient.css";
 import "../components/CautionTable.css";
 import { useAuth } from "../context/AuthContext";
+import LoadingOverlay from "../components/LoadingOverlay";
+
 
 export default function SituationClient() {
   const { user } = useAuth();
@@ -31,6 +33,7 @@ export default function SituationClient() {
 
   const [isClientValid, setIsClientValid] = useState(true);
   const [clientTouched, setClientTouched] = useState(false);
+   const [isLoading, setIsLoading] = useState(false); 
 
   // Memoize options to prevent infinite re-renders
   const clientOptionsFormatted = useMemo(() => {
@@ -133,35 +136,61 @@ const clientsByCode = useMemo(() => {
           <NavigationMenu />
 
           <div className="card">
+            <LoadingOverlay show={isLoading} text="Chargement en cours..." />
             <h3>Critères</h3>
             <div className="form-row">
   <label>
     Client <span className="required">*</span>
   </label>
-  <div className="input-wrapper">
-    <input
-      value={client}
-      onChange={(e) => {
-        const value = (e?.target?.value ?? "").toString().toUpperCase().trim();
-        setClientTouched(true);
-        setClient(value);
 
-        const hit = clientsByCode[value];
-        setRaison(hit ? hit.name : "");
-        setIsClientValid(value === "" ? true : !!hit); // empty not “invalid”, just incomplete
-      }}
-      onBlur={() => setClientTouched(true)}
-      onFocus={() => setClientTouched(true)}
-      autoComplete="off"
-      className={`input ${clientTouched && !isClientValid ? "input-error" : ""}`}
-      placeholder="Ex: CGP78810"
-    />
-    {clientTouched && !isClientValid && (
-      <span className="field-error">Client introuvable</span>
-    )}
+  <div className="input-wrapper">
+    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <input
+        value={client}
+        onChange={(e) => {
+          const value = (e?.target?.value ?? "")
+            .toString()
+            .toUpperCase()
+            .trim();
+
+          setClient(value);
+
+          // Raison auto
+          const hit = clientsByCode[value];
+          setRaison(hit ? hit.name : "");
+
+          // Reset valid pendant la saisie
+          setIsClientValid(true);
+
+          // Validation différée (1s)
+          if (window.clientTimeout) clearTimeout(window.clientTimeout);
+          setIsLoading(true); // active blur
+
+          window.clientTimeout = setTimeout(() => {
+            const code = (value || "").trim().toUpperCase();
+            setClientTouched(true);
+            setIsClientValid(code === "" ? true : !!clientsByCode[code]);
+            setIsLoading(false); // désactive blur
+          }, 1000);
+        }}
+        onBlur={() => {
+          setClientTouched(true);
+          const code = (client || "").trim().toUpperCase();
+          setIsClientValid(code === "" ? true : !!clientsByCode[code]);
+        }}
+        autoComplete="off"
+        className={`input ${
+          clientTouched && !isClientValid ? "sage-input-error" : ""
+        }`}
+        placeholder="Ex: CGP78810"
+      />
+
+      {clientTouched && !isClientValid && (
+        <span className="sage-input-error-text">Client introuvable</span>
+      )}
+    </div>
   </div>
 </div>
-
 
             <div className="form-row">
               <label>Raison sociale</label>

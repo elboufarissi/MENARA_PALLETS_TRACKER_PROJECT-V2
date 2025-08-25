@@ -12,6 +12,7 @@ import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
 import { useMemo } from "react"; // you already import React, but ensure useMemo is available
+import LoadingOverlay from "../components/LoadingOverlay";
 
 // Dynamic schema based on mode: create, view (read-only), or edit, and user role
 const createValidationSchema = (isEditMode, isReadOnly, userRole) => {
@@ -244,6 +245,8 @@ const clientsByCode = useMemo(() => {
   }
   return map;
 }, [clients]);
+
+const [isLoading, setIsLoading] = useState(false);
 
 // Keep xraison_0 in sync when xclient_0 changes
 useEffect(() => {
@@ -875,11 +878,13 @@ useEffect(() => {
     }));
 
     return (
+      
       <form
         onSubmit={handleFormSubmit}
         className={`sage-form ${
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
+        style={{ position: "relative" }}
       >
   <div className="form-scrollable" style={{minHeight: '60vh', overflowY: 'visible', paddingRight: 8}}>
           <div className="sage-form-header">
@@ -1058,50 +1063,66 @@ useEffect(() => {
                 noResultsText="Site introuvable"
               />
             </div>{" "}
-            <div className="sage-row">
+           <div className="sage-row">
   <label>
     Client <span className="sage-required">*</span>
   </label>
 
-  <input
-    type="text"
-    {...register("xclient_0")}
-    value={getValues("xclient_0")}
-    onChange={(e) => {
-      const v = e.target.value.trim().toUpperCase();
-      setClientHasBeenTouched(true);
-      setValue("xclient_0", v, { shouldValidate: true });
+  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+    <input
+      type="text"
+      {...register("xclient_0")}
+      value={getValues("xclient_0")}
+      onChange={(e) => {
+        const v = e.target.value.trim().toUpperCase();
+        setClientHasBeenTouched(true);
+        setValue("xclient_0", v, { shouldValidate: false });
 
-      if (!isEditMode && !isReadOnly) {
-        if (v === "") {
-          clearErrors("xclient_0"); // let Yup handle "required" on submit
-        } else {
+        // Vérif après un petit délai (1s sans taper)
+        if (window.clientTimeout) clearTimeout(window.clientTimeout);
+        // 🚀 Active le loader pendant la recherche
+        setIsLoading(true);
+        window.clientTimeout = setTimeout(() => {
+          const finalValue = (getValues("xclient_0") || "").trim().toUpperCase();
+          if (finalValue && !clientsByCode[finalValue]) {
+            setError("xclient_0", {
+              type: "manual",
+              message: "Client introuvable",
+            });
+          } else {
+            clearErrors("xclient_0");
+          }
+          // ✅ Désactive le loader une fois terminé
+          setIsLoading(false);
+        }, 1000);
+      }}
+      onBlur={() => {
+        setFocusField("");
+        setClientHasBeenTouched(true);
+        const v = (getValues("xclient_0") || "").trim().toUpperCase();
+        if (!isEditMode && !isReadOnly && v !== "") {
           const ok = !!clientsByCode[v];
           if (ok) clearErrors("xclient_0");
           else setError("xclient_0", { type: "manual", message: "Client introuvable" });
         }
+      }}
+      onFocus={() => setFocusField("xclient_0")}
+      autoComplete="off"
+      disabled={isReadOnly || isEditMode}
+      className={
+        getInputClass("xclient_0") +
+        (errors.xclient_0 ? " sage-input-error" : "")
       }
-    }}
-    onBlur={() => {
-      setFocusField("");
-      setClientHasBeenTouched(true);
-      const v = (getValues("xclient_0") || "").trim().toUpperCase();
-      if (!isEditMode && !isReadOnly && v !== "") {
-        const ok = !!clientsByCode[v];
-        if (ok) clearErrors("xclient_0");
-        else setError("xclient_0", { type: "manual", message: "Client introuvable" });
-      }
-    }}
-    onFocus={() => setFocusField("xclient_0")}
-    autoComplete="off"
-    disabled={isReadOnly || isEditMode}
-    className={getInputClass("xclient_0")}
-  />
+    />
 
-  {errors.xclient_0 && (
-    <span className="sage-input-error-text">{errors.xclient_0.message}</span>
-  )}
+    {errors.xclient_0 && (
+      <span className="client-autocomplete-no-results">
+        {errors.xclient_0.message}
+      </span>
+    )}
+  </div>
 </div>
+
 
               <div className="sage-row">
   <label>Raison sociale</label>
@@ -1408,8 +1429,13 @@ useEffect(() => {
           </div>
         </div> <br></br>  
         </div>
+        <LoadingOverlay show={isLoading} text="Chargement en cours..." />
+
       </form>
+      
     );
+    
+    
   }
 );
 
