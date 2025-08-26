@@ -13,7 +13,7 @@ import api from "../utils/api";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
-
+import LoadingOverlay from "../components/LoadingOverlay";
 // Dynamic schema based on mode: create, view (read-only), or edit
 const createValidationSchema = (isEditMode, isReadOnly) => {
   if (isReadOnly) {
@@ -110,6 +110,8 @@ const RecuperationForm = forwardRef(
       getValues,
       setValue,
       watch,
+      setError, 
+      clearErrors,
       formState: { errors },
     } = useForm({
       resolver: yupResolver(createValidationSchema(isEditMode, isReadOnly)),
@@ -169,6 +171,8 @@ useEffect(() => {
     const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
     const [cinHasBeenTouched, setCinHasBeenTouched] = useState(false);
     const [montantHasBeenTouched, setMontantHasBeenTouched] = useState(false);
+    const [isFormLoading, setIsFormLoading] = useState(false);
+
     useEffect(() => {
       if (initialData) {
         // Update validation status
@@ -691,13 +695,18 @@ useEffect(() => {
         className={`sage-form ${
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
+        
         style={{
           position: "relative",
           height: "100%",
           display: "flex",
           flexDirection: "column",
         }}
+        
       >
+       
+
+  <LoadingOverlay show={isFormLoading} text="Chargement..." />
         <div className="sage-form-header">
           <div className="sage-form-header-left">
             <FaArrowLeft className="sage-nav-arrow" />
@@ -867,47 +876,71 @@ useEffect(() => {
                 noResultsText="Site introuvable"
               />
             </div>{" "}
-            <div className="sage-row">
+           <div className="sage-row">
   <label>
     Client <span className="sage-required">*</span>
   </label>
-  <input
-    type="text"
-    {...register("xclient_0")}
-    value={getValues("xclient_0")}
-    onChange={(e) => {
-      const v = e.target.value.trim().toUpperCase();
-      setClientHasBeenTouched(true);
-      setValue("xclient_0", v, { shouldValidate: true });
-      // live validation vs known clients
-      if (!isEditMode && !isReadOnly) {
-        if (v === "") {
-          // let Yup handle "required" on submit
-        } else {
-          if (!clientsByCode[v]) {
-            // mark invalid immediately
-            // (optional) you can also keep a local isClientValid state if you show red borders
-          }
+
+  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+    <input
+      type="text"
+      {...register("xclient_0")}
+      value={getValues("xclient_0")}
+      onChange={(e) => {
+        const v = e.target.value.trim().toUpperCase();
+        setClientHasBeenTouched(true);
+        setValue("xclient_0", v, { shouldValidate: false });
+
+        if (!isEditMode && !isReadOnly) {
+          if (window.clientTimeout) clearTimeout(window.clientTimeout);
+          setIsFormLoading(true); // active blur
+          window.clientTimeout = setTimeout(() => {
+            const finalValue = (getValues("xclient_0") || "")
+              .trim()
+              .toUpperCase();
+            if (finalValue && !clientsByCode[finalValue]) {
+              setError("xclient_0", {
+                type: "manual",
+                message: "Client introuvable",
+              });
+            } else {
+              clearErrors("xclient_0");
+            }
+            setIsFormLoading(false); // désactive blur
+          }, 1000); // délai de 1s après avoir fini de taper
         }
+      }}
+      onBlur={() => {
+        setFocusField("");
+        setClientHasBeenTouched(true);
+        const v = (getValues("xclient_0") || "").trim().toUpperCase();
+        if (!isEditMode && !isReadOnly && v !== "") {
+          const ok = !!clientsByCode[v];
+          if (ok) clearErrors("xclient_0");
+          else
+            setError("xclient_0", {
+              type: "manual",
+              message: "Client introuvable",
+            });
+        }
+      }}
+      onFocus={() => setFocusField("xclient_0")}
+      autoComplete="off"
+      disabled={isReadOnly || isEditMode}
+      className={
+        getInputClass("xclient_0") +
+        (errors.xclient_0 ? " sage-input-error" : "")
       }
-    }}
-    onBlur={() => {
-      setFocusField("");
-      setClientHasBeenTouched(true);
-      const v = (getValues("xclient_0") || "").trim().toUpperCase();
-      // optional: final check here (you already have schema + submit guard)
-    }}
-    onFocus={() => setFocusField("xclient_0")}
-    autoComplete="off"
-    disabled={isReadOnly || isEditMode}
-    className={getInputClass("xclient_0")}
-  />
-  {errors.xclient_0 && (
-    <span className="sage-input-error-text">
-      {errors.xclient_0.message}
-    </span>
-  )}
+    />
+
+    {errors.xclient_0 && (
+      <span className="client-autocomplete-no-results">
+        {errors.xclient_0.message}
+      </span>
+    )}
+  </div>
 </div>
+
 
             <div className="sage-row">
   <label>Raison sociale</label>

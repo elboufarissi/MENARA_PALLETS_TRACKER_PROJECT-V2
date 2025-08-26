@@ -63,7 +63,7 @@ class ConsignationController extends Controller
         $query->orderBy('xdate_0', 'desc')->orderBy('xnum_0', 'desc');
 
         // Pagination
-        $consignations = $request->has('per_page') 
+        $consignations = $request->has('per_page')
             ? $query->paginate($request->per_page)
             : $query->get();
 

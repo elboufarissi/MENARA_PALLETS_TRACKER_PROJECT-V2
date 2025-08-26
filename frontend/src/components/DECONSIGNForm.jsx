@@ -12,6 +12,7 @@ import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
 import { useMemo } from "react"; // you already import React, but ensure useMemo is available
+import LoadingOverlay from "../components/LoadingOverlay";
 
 // Dynamic schema based on mode: create, view (read-only), or edit, and user role
 const createValidationSchema = (isEditMode, isReadOnly, userRole) => {
@@ -830,11 +831,13 @@ const DECONSIGNForm = forwardRef(
     }));
 
     return (
+      
       <form
         onSubmit={handleFormSubmit}
         className={`sage-form ${
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
+        style={{ position: "relative" }}
       >
         <div
           className="form-scrollable"
@@ -1409,8 +1412,13 @@ const DECONSIGNForm = forwardRef(
           </div>{" "}
           <br></br>
         </div>
+        <LoadingOverlay show={isLoading} text="Chargement en cours..." />
+
       </form>
+      
     );
+    
+    
   }
 );
 

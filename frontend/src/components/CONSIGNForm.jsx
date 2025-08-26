@@ -12,6 +12,9 @@ import axios from "axios";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
+import api from "../utils/api";
+import LoadingOverlay from "../components/LoadingOverlay";
+
 
 // Dynamic schema based on mode: create, view (read-only), or edit
 const createValidationSchema = (isEditMode, isReadOnly) => {
@@ -195,6 +198,7 @@ const clientsByCode = useMemo(
 );
 
 const watchedClientCode = watch("xclient_0");
+const [isLoading, setIsLoading] = useState(false);
 
 // Keep raison sociale auto from client code
 useEffect(() => {
@@ -678,18 +682,10 @@ useEffect(() => {
         }
         if (initialData && initialData.xnum_0) {
           // EDIT MODE: send PUT to update
-          await axios.put(
-            `http://localhost:8000/api/consignations/${encodeURIComponent(
-              initialData.xnum_0
-            )}`,
-            submissionData,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-            }
-          );
+          await api.put(
+   `/consignations/${encodeURIComponent(initialData.xnum_0)}`, 
+   submissionData 
+ );
           alert("Consignation modifiée avec succès!");
         } else {
           // CREATE MODE: send POST to create (send xdate_0 and xheure_0)
@@ -699,16 +695,7 @@ useEffect(() => {
             xheure_0: currentTime,
           };
           console.log("Sending create data:", createData); // Debug log
-          await axios.post(
-            "http://localhost:8000/api/consignations",
-            createData,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-            }
-          );
+          await api.post("/consignations", createData);
           alert("Consignation enregistrée avec succès!");
         }
 
@@ -860,18 +847,7 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
 
         console.log("Sending validation data:", validationData); // Debug log
 
-        await axios.put(
-          `http://localhost:8000/api/consignations/${encodeURIComponent(
-            initialData.xnum_0
-          )}`,
-          validationData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          }
-        );
+        await api.put(`/consignations/${encodeURIComponent(initialData.xnum_0)}`, validationData);
 
         console.log("Validation API call successful"); // Debug log
 
@@ -944,7 +920,7 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
     };
 
     return (
-      <div>
+      <div style={{ position: "relative" }}>
         <form
           onSubmit={handleFormSubmit}
           className={`sage-form ${
@@ -1122,50 +1098,54 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
                   noResultsText="Site introuvable"
                 />
               </div>{" "}
-             <div className="sage-row">
+            <div className="sage-row">
   <label>
     Client <span className="sage-required">*</span>
   </label>
+  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+    <input
+      type="text"
+      {...register("xclient_0")}
+      value={getValues("xclient_0")}
+      onChange={(e) => {
+        const v = e.target.value.trim().toUpperCase();
+        setValue("xclient_0", v, { shouldValidate: false });
 
-  <input
-    type="text"
-    {...register("xclient_0")}
-    value={getValues("xclient_0")}
-    onChange={(e) => {
-      const v = e.target.value.trim().toUpperCase();
-      setClientHasBeenTouched(true);
-      setValue("xclient_0", v, { shouldValidate: true });
+        if (window.clientTimeout) clearTimeout(window.clientTimeout);
 
-      if (!isEditMode && !isReadOnly) {
-        if (v === "") {
-          clearErrors("xclient_0"); // let Yup handle "required" on submit
-        } else {
-          const ok = !!clientsByCode[v];
-          if (ok) clearErrors("xclient_0");
-          else setError("xclient_0", { type: "manual", message: "Client introuvable" });
-        }
+        // 🚀 Active le loader pendant la recherche
+        setIsLoading(true);
+
+        window.clientTimeout = setTimeout(() => {
+          const finalValue = (getValues("xclient_0") || "").trim().toUpperCase();
+          if (finalValue && !clientsByCode[finalValue]) {
+            setError("xclient_0", {
+              type: "manual",
+              message: "Client introuvable",
+            });
+          } else {
+            clearErrors("xclient_0");
+          }
+          // ✅ Désactive le loader une fois terminé
+          setIsLoading(false);
+        }, 1000);
+      }}
+      autoComplete="off"
+      disabled={!!initialData && !isEditMode}
+      className={
+        getInputClass("xclient_0") +
+        (errors.xclient_0 ? " sage-input-error" : "")
       }
-    }}
-    onBlur={() => {
-      setFocusField("");
-      setClientHasBeenTouched(true);
-      const v = (getValues("xclient_0") || "").trim().toUpperCase();
-      if (!isEditMode && !isReadOnly && v !== "") {
-        const ok = !!clientsByCode[v];
-        if (ok) clearErrors("xclient_0");
-        else setError("xclient_0", { type: "manual", message: "Client introuvable" });
-      }
-    }}
-    onFocus={() => setFocusField("xclient_0")}
-    autoComplete="off"
-    disabled={isReadOnly || isEditMode}
-    className={getInputClass("xclient_0")}
-  />
+    />
 
-  {errors.xclient_0 && (
-    <span className="sage-input-error-text">{errors.xclient_0.message}</span>
-  )}
+    {errors.xclient_0 && (
+      <span className="client-autocomplete-no-results">
+        {errors.xclient_0.message}
+      </span>
+    )}
+  </div>
 </div>
+
 
               <div className="sage-row">
   <label>Raison sociale</label>
@@ -1583,6 +1563,8 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
             </div>
           </div> <br></br>  
         </form>
+        {/* 🔥 overlay on top of the form */}
+    <LoadingOverlay show={isLoading} text="Chargement en cours..." />
       </div>
     );
   }

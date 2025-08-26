@@ -83,9 +83,13 @@ const Audit = () => {
     debRef.current = setTimeout(() => fetchLogs(page), 400)
   }
   const handleHeaderFilter = (field, value) => {
-    setFilters((f) => ({ ...f, [field]: value }))
-    triggerFetch(1)
-  }
+  setFilters((prev) => ({ ...prev, [field]: value }))
+  
+  // only trigger fetch later (debounced)
+  if (debRef.current) clearTimeout(debRef.current)
+  debRef.current = setTimeout(() => fetchLogs(1), 800) // 600ms after typing stops
+}
+
 
   const fetchLogs = async (page = 1) => {
     setLoading(true)

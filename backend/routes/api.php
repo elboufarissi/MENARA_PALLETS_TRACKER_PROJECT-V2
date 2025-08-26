@@ -84,6 +84,9 @@ Route::get('/test-pdf-simple', function () {
 //     }
 // });
 
+
+
+
 // Routes for facilities and clients (if still used by your form for dropdowns eventually)
 Route::get('/facilities', function () {
     return FACILITY::all(['FCY_0', 'FCYNAM_0']); // Simpler fetch if no specific conditions
@@ -288,6 +291,7 @@ Route::delete('restitutions/{xnum_0}', [RestitutionController::class, 'destroy']
 Route::apiResource('consignations', ConsignationController::class);
 Route::get('consignations/{xnum_0}/pdf', [ConsignationController::class, 'generatePDF']);
 Route::get('consignations/{xnum_0}/preview-pdf', [ConsignationController::class, 'previewPDF']);
+
 
 // Deconsignation routes
 Route::apiResource('deconsignations', DeconsignationController::class);
