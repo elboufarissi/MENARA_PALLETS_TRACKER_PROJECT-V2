@@ -235,6 +235,7 @@ const DECONSIGNForm = forwardRef(
     // State for solde information (setters used even if state not read)
     const [, setCurrentSolde] = useState(null);
     const [, setIsLoadingSolde] = useState(false);
+    const [isLoading] = useState(false);
     // Map client code -> raison/name for quick lookups
     const clientsByCode = useMemo(() => {
       const map = {};
@@ -831,7 +832,6 @@ const DECONSIGNForm = forwardRef(
     }));
 
     return (
-      
       <form
         onSubmit={handleFormSubmit}
         className={`sage-form ${
@@ -1413,12 +1413,8 @@ const DECONSIGNForm = forwardRef(
           <br></br>
         </div>
         <LoadingOverlay show={isLoading} text="Chargement en cours..." />
-
       </form>
-      
     );
-    
-    
   }
 );
 
