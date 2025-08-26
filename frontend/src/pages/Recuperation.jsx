@@ -5,7 +5,6 @@ import RecuperationForm from "../components/RecuperationForm";
 import CautionHeader from "../components/CautionHeader";
 import NavigationMenu from "../components/NavigationMenu";
 import Split from "@uiw/react-split";
-import axios from "axios";
 import api from "../utils/api";
 import SidebarBootstrap from "../components/SidebarBootstrap";
 import { useAuth } from "../context/AuthContext";

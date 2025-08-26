@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            FacilitySeeder::class,
-            BpCustomerSeeder::class,
+            AdminUserSeeder::class,
+            // Add other seeders here if needed
         ]);
     }
 }

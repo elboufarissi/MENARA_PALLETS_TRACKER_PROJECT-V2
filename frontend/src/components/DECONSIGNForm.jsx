@@ -169,7 +169,7 @@ const DECONSIGNForm = forwardRef(
       reset,
       getValues,
       setValue,
-      setError, 
+      setError,
       clearErrors,
       watch,
       formState: { errors },
@@ -190,8 +190,8 @@ const DECONSIGNForm = forwardRef(
       },
       mode: "onChange", // Validate on change to catch issues early
     });
-const watchedClient = watch("xclient_0");
- const watchedSite   = watch("xsite_0");
+    const watchedClient = watch("xclient_0");
+    const watchedSite = watch("xsite_0");
 
     // State for date and time
     const [currentDate, setCurrentDate] = useState("");
@@ -211,54 +211,61 @@ const watchedClient = watch("xclient_0");
     // State for external transporter toggle
     const [isExternalTransporter, setIsExternalTransporter] = useState(false);
 
-    // State for validation - track if all required fields have valid values
+    // State for validation - track if all required fields have valid values (some values unused, only setters used)
     const [isSiteValid, setIsSiteValid] = useState(true);
-    const [isClientValid, setIsClientValid] = useState(true);
-    const [isCamionValid, setIsCamionValid] = useState(true);
+    const [, setIsClientValid] = useState(true);
+    const [, setIsCamionValid] = useState(true);
     const [isPaletteRameneValid, setIsPaletteRameneValid] = useState(true);
-    const [isPaletteADeconsignerValid, setIsPaletteADeconsignerValid] = useState(true);
-    const [isPaletteDeconsigneesValid, setIsPaletteDeconsigneesValid] = useState(true);
+    const [, setIsPaletteADeconsignerValid] = useState(true);
+    const [, setIsPaletteDeconsigneesValid] = useState(true);
     const [isMatriculeValid, setIsMatriculeValid] = useState(true); // For both Matricule Camion and Matricule client
 
     // Track if user has interacted with fields (to show errors only after interaction)
     const [siteHasBeenTouched, setSiteHasBeenTouched] = useState(false);
-    const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
-    const [camionHasBeenTouched, setCamionHasBeenTouched] = useState(false);
+    const [, setClientHasBeenTouched] = useState(false);
+    const [, setCamionHasBeenTouched] = useState(false);
     const [paletteRameneHasBeenTouched, setPaletteRameneHasBeenTouched] =
       useState(false);
-    const [paletteADeconsignerHasBeenTouched, setPaletteADeconsignerHasBeenTouched] = useState(false);
-    const [paletteDeconsigneesHasBeenTouched, setPaletteDeconsigneesHasBeenTouched] = useState(false);
+    const [, setPaletteADeconsignerHasBeenTouched] = useState(false);
+    const [, setPaletteDeconsigneesHasBeenTouched] = useState(false);
     const [matriculeHasBeenTouched, setMatriculeHasBeenTouched] =
       useState(false); // For both Matricule fields
 
-    // State for solde information
-    const [currentSolde, setCurrentSolde] = useState(null);
-    const [isLoadingSolde, setIsLoadingSolde] = useState(false);
-// Map client code -> raison/name for quick lookups
-const clientsByCode = useMemo(() => {
-  const map = {};
-  for (const c of (clients || [])) {
-    const code = String(c.client_code || "").trim().toUpperCase();
-    const raison = c.raison_sociale || c.client_name || "";
-    if (code) map[code] = { ...c, raison };
-  }
-  return map;
-}, [clients]);
+    // State for solde information (setters used even if state not read)
+    const [, setCurrentSolde] = useState(null);
+    const [, setIsLoadingSolde] = useState(false);
+    // Map client code -> raison/name for quick lookups
+    const clientsByCode = useMemo(() => {
+      const map = {};
+      for (const c of clients || []) {
+        const code = String(c.client_code || "")
+          .trim()
+          .toUpperCase();
+        const raison = c.raison_sociale || c.client_name || "";
+        if (code) map[code] = { ...c, raison };
+      }
+      return map;
+    }, [clients]);
 
-// Keep xraison_0 in sync when xclient_0 changes
-useEffect(() => {
-  const code = String(watchedClient || "").trim().toUpperCase();
-  const c = clientsByCode[code];
-  const auto = c ? (c.raison_sociale || c.client_name || c.raison || "") : "";
+    // Keep xraison_0 in sync when xclient_0 changes
+    useEffect(() => {
+      const code = String(watchedClient || "")
+        .trim()
+        .toUpperCase();
+      const c = clientsByCode[code];
+      const auto = c ? c.raison_sociale || c.client_name || c.raison || "" : "";
 
-  // Only write when we actually have a non-empty auto value
-  if (auto) {
-    const current = (getValues("xraison_0") || "").trim();
-    if (current !== auto) {
-      setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
-    }
-  }
-}, [clientsByCode, watchedClient, setValue, getValues]);
+      // Only write when we actually have a non-empty auto value
+      if (auto) {
+        const current = (getValues("xraison_0") || "").trim();
+        if (current !== auto) {
+          setValue("xraison_0", auto, {
+            shouldValidate: false,
+            shouldDirty: true,
+          });
+        }
+      }
+    }, [clientsByCode, watchedClient, setValue, getValues]);
 
     useEffect(() => {
       if (initialData) {
@@ -319,15 +326,16 @@ useEffect(() => {
     }, [initialData, reset]);
 
     useEffect(() => {
-  if (!initialData) return;
-  const pre =
-    initialData.xraison_0 ||
-    initialData.customer?.raison_sociale ||
-    "";
-  if (pre) {
-    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
-  }
-}, [initialData, setValue]);
+      if (!initialData) return;
+      const pre =
+        initialData.xraison_0 || initialData.customer?.raison_sociale || "";
+      if (pre) {
+        setValue("xraison_0", pre, {
+          shouldValidate: false,
+          shouldDirty: true,
+        });
+      }
+    }, [initialData, setValue]);
 
     // Separate useEffect to handle form reset after dropdown data is loaded
     useEffect(() => {
@@ -429,7 +437,6 @@ useEffect(() => {
       }
     };
 
-    
     // Effect to fetch solde when client and site change
     useEffect(() => {
       if (watchedClient && watchedSite && !initialData) {
@@ -440,65 +447,6 @@ useEffect(() => {
         setIsLoadingSolde(false);
       }
     }, [watchedClient, watchedSite, initialData]);
-
-    // Helper function to validate all required fields
-    const validateAllRequiredFields = () => {
-      if (isEditMode || isReadOnly) {
-        return { allValid: true, invalidCount: 0, invalidFields: [] };
-      }
-
-      const currentValues = getValues();
-      const invalidFields = [];
-
-      // Check Site
-      const siteValue = currentValues.xsite_0;
-      const siteIsValid = siteValue !== "" && isSiteValid;
-      if (!siteIsValid) invalidFields.push("Site");
-
-      // Check Client
-      const clientValue = currentValues.xclient_0;
-      const clientIsValid = clientValue !== "" && isClientValid;
-      if (!clientIsValid) invalidFields.push("Client");
-
-      // Check Matricule (xcamion_0 - required field)
-      const matriculeValue = currentValues.xcamion_0;
-      const matriculeIsValid =
-        matriculeValue !== "" &&
-        matriculeValue.trim() !== "" &&
-        isMatriculeValid;
-      if (!matriculeIsValid) invalidFields.push("Matricule");
-
-      // Check Palettes à déconsigner - use Yup validation results
-      const paletteDeconsignerValue = currentValues.palette_a_deconsigner;
-      const paletteDeconsignerHasError = errors.palette_a_deconsigner;
-      const paletteDeconsignerIsValid =
-        paletteDeconsignerValue !== "" &&
-        !isNaN(parseFloat(paletteDeconsignerValue)) &&
-        parseFloat(paletteDeconsignerValue) > 0 &&
-        !paletteDeconsignerHasError;
-      if (!paletteDeconsignerIsValid)
-        invalidFields.push("Palettes à déconsigner");
-      const deconsignees = parseFloat(currentValues.palette_deconsignees);
-      const aDeconsigner = parseFloat(currentValues.palette_a_deconsigner);
-      if (deconsignees > aDeconsigner) {
-        invalidFields.push("Palettes déconsignées > autorisé");
-      }
-
-      // Check Palettes ramenées
-      const paletteRameneValue = currentValues.palette_ramene;
-      const paletteRameneIsValid =
-        paletteRameneValue !== "" &&
-        !isNaN(parseInt(paletteRameneValue)) &&
-        parseInt(paletteRameneValue) >= 0 &&
-        isPaletteRameneValid;
-      if (!paletteRameneIsValid) invalidFields.push("Palettes ramenées");
-
-      return {
-        allValid: invalidFields.length === 0,
-        invalidCount: invalidFields.length,
-        invalidFields: invalidFields,
-      };
-    };
 
     // Helper function to check if form can be saved
     const canSaveForm = () => {
@@ -642,7 +590,7 @@ useEffect(() => {
         }
 
         if (onSuccess) onSuccess();
-        
+
         // Reset form after successful save to prevent duplicate submissions
         if (!isEditMode) {
           reset({
@@ -751,10 +699,21 @@ useEffect(() => {
         return;
       }
 
-      try {
-        // Get current form values
-        const currentValues = getValues();
+      // Check if CHEF_PARC has filled palette_deconsignees before CAISSIERE/CAISSIER can validate
+      const currentValues = getValues();
+      const paletteDeconsignees =
+        parseInt(
+          currentValues.palette_deconsignees || initialData.palette_deconsignees
+        ) || 0;
 
+      if (paletteDeconsignees <= 0) {
+        alert(
+          "Impossible de valider : Le CHEF_PARC doit d'abord renseigner le nombre de palettes déconsignées (conformes)."
+        );
+        return;
+      }
+
+      try {
         // Send PUT request with all current data including XVALSTA set to 2
         const validationData = {
           xcamion_0: currentValues.xcamion_0 || initialData.xcamion_0,
@@ -767,11 +726,7 @@ useEffect(() => {
               currentValues.palette_a_deconsigner ||
                 initialData.palette_a_deconsigner
             ) || 0,
-          palette_deconsignees:
-            parseInt(
-              currentValues.palette_deconsignees ||
-                initialData.palette_deconsignees
-            ) || 0,
+          palette_deconsignees: paletteDeconsignees, // Use the already calculated value
           xvalsta_0: 2, // Set validation to "Oui" as number
         };
 
@@ -871,7 +826,7 @@ useEffect(() => {
           .dispatchEvent(
             new Event("submit", { cancelable: true, bubbles: true })
           );
-      }
+      },
     }));
 
     return (
@@ -881,13 +836,18 @@ useEffect(() => {
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
       >
-  <div className="form-scrollable" style={{minHeight: '60vh', overflowY: 'visible', paddingRight: 8}}>
+        <div
+          className="form-scrollable"
+          style={{ minHeight: "60vh", overflowY: "visible", paddingRight: 8 }}
+        >
           <div className="sage-form-header">
             <div className="sage-form-header-left">
               <FaArrowLeft className="sage-nav-arrow" />
               <FaArrowRight className="sage-nav-arrow" />
               <span className="sage-form-title">
-                {isEditMode ? "Modification de Déconsignation" : "Déconsignation"}
+                {isEditMode
+                  ? "Modification de Déconsignation"
+                  : "Déconsignation"}
               </span>
               {isEditMode && (
                 <span
@@ -903,7 +863,6 @@ useEffect(() => {
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-
               <button
                 type="button"
                 className="sage-validation-btn"
@@ -911,7 +870,12 @@ useEffect(() => {
                 style={
                   currentValidationStatus === "1" &&
                   canUserValidate &&
-                  userRole !== "CHEF_PARC"
+                  userRole !== "CHEF_PARC" &&
+                  // NEW: Check if palette_deconsignees has been filled by CHEF_PARC
+                  (parseInt(
+                    getValues("palette_deconsignees") ||
+                      initialData?.palette_deconsignees
+                  ) || 0) > 0
                     ? {
                         backgroundColor: "#0866ff",
                         color: "#fff",
@@ -928,7 +892,12 @@ useEffect(() => {
                 disabled={
                   currentValidationStatus === "2" ||
                   !canUserValidate ||
-                  userRole === "CHEF_PARC"
+                  userRole === "CHEF_PARC" ||
+                  // NEW: Disable if palette_deconsignees is not filled
+                  (parseInt(
+                    getValues("palette_deconsignees") ||
+                      initialData?.palette_deconsignees
+                  ) || 0) <= 0
                 }
               >
                 Validation
@@ -949,464 +918,496 @@ useEffect(() => {
                   disabled
                   className="sage-input"
                   value={initialData?.xnum_0 || ""}
-                tabIndex={-1}
-              />
-            </div>{" "}
-            <div className="sage-row">
-              <label>
-                Site <span className="sage-required">*</span>
-              </label>
-              <AutocompleteInput
-                options={sites.map((site) => ({
-                  id: site.id?.toString() || "",
-                  code: site.site_code || "",
-                  name: site.site_name || "",
-                }))}
-                value={getValues("xsite_0")}
-                onChange={(e) => {
-                  let value =
-                    e && e.target && typeof e.target.value === "string"
-                      ? e.target.value
-                      : e;
-
-                  // Mark site as touched when user starts typing
-                  setSiteHasBeenTouched(true);
-
-                  if (typeof value === "object" && value && value.code) {
-                    // Save the full site code when a suggestion is selected
-                    setValue("xsite_0", value.code, { shouldValidate: true });
-                    setIsSiteValid(true);
-                    setSiteInputError(false);
-                  } else if (typeof value === "string") {
-                    const numericValue = value.replace(/[^0-9]/g, "");
-                    const isNonDigit = value.length > 0 && /[^0-9]/.test(value);
-                    const matchingSite = sites.find(
-                      (site) => site.site_code === numericValue
-                    );
-                    const noSiteMatch =
-                      numericValue.length > 0 && !matchingSite;
-
-                    // Update validation states
-                    const hasError = isNonDigit || noSiteMatch;
-                    setSiteInputError(hasError);
-
-                    // Only mark as invalid if user has entered something invalid
-                    if (numericValue === "") {
-                      setIsSiteValid(true); // Empty is not invalid, just not filled
-                    } else {
-                      setIsSiteValid(matchingSite !== undefined);
-                    }
-
-                    setValue("xsite_0", numericValue, {
-                      shouldValidate: true,
-                    });
-                  }
-                }}
-                onSelect={(selectedOption) => {
-                  setSiteHasBeenTouched(true);
-                  if (selectedOption && selectedOption.code) {
-                    setValue("xsite_0", selectedOption.code, {
-                      shouldValidate: true,
-                    });
-                    setIsSiteValid(true);
-                    setSiteInputError(false);
-                  }
-                }}
-                onKeyPress={(e) => {
-                  if (!/[0-9]/.test(e.key)) {
-                    setSiteInputError(true);
-                    e.preventDefault();
-                  } else {
-                    setSiteInputError(false);
-                  }
-                }}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                disabled={initialData || isLoadingDropdowns}
-                className={
-                  getInputClass("xsite_0") +
-                  (siteInputError ||
-                  (siteHasBeenTouched &&
-                    !isSiteValid &&
-                    !isEditMode &&
-                    !isReadOnly)
-                    ? " sage-input-error"
-                    : "")
-                }
-                onFocus={() => setFocusField("xsite_0")}
-                onBlur={() => {
-                  setFocusField("");
-                  setSiteInputError(false);
-                  setSiteHasBeenTouched(true);
-
-                  // Validate site when field loses focus
-                  const currentSiteValue = getValues("xsite_0");
-                  if (!isEditMode && !isReadOnly) {
-                    if (currentSiteValue === "") {
-                      setIsSiteValid(true); // Empty is not invalid, just not filled
-                    } else {
-                      const matchingSite = sites.find(
-                        (site) => site.site_code === currentSiteValue
-                      );
-                      setIsSiteValid(matchingSite !== undefined);
-                    }
-                  }
-                }}
-                searchKeys={["code", "name"]}
-                displayKeys={["code", "name"]}
-                primaryKey="code"
-                noResultsText="Site introuvable"
-              />
-            </div>{" "}
-            <div className="sage-row">
-  <label>
-    Client <span className="sage-required">*</span>
-  </label>
-
-  <input
-    type="text"
-    {...register("xclient_0")}
-    value={getValues("xclient_0")}
-    onChange={(e) => {
-      const v = e.target.value.trim().toUpperCase();
-      setClientHasBeenTouched(true);
-      setValue("xclient_0", v, { shouldValidate: true });
-
-      if (!isEditMode && !isReadOnly) {
-        if (v === "") {
-          clearErrors("xclient_0"); // let Yup handle "required" on submit
-        } else {
-          const ok = !!clientsByCode[v];
-          if (ok) clearErrors("xclient_0");
-          else setError("xclient_0", { type: "manual", message: "Client introuvable" });
-        }
-      }
-    }}
-    onBlur={() => {
-      setFocusField("");
-      setClientHasBeenTouched(true);
-      const v = (getValues("xclient_0") || "").trim().toUpperCase();
-      if (!isEditMode && !isReadOnly && v !== "") {
-        const ok = !!clientsByCode[v];
-        if (ok) clearErrors("xclient_0");
-        else setError("xclient_0", { type: "manual", message: "Client introuvable" });
-      }
-    }}
-    onFocus={() => setFocusField("xclient_0")}
-    autoComplete="off"
-    disabled={isReadOnly || isEditMode}
-    className={getInputClass("xclient_0")}
-  />
-
-  {errors.xclient_0 && (
-    <span className="sage-input-error-text">{errors.xclient_0.message}</span>
-  )}
-</div>
-
-              <div className="sage-row">
-  <label>Raison sociale</label>
-
-  {/* Visible, read-only value (auto-filled by the effect) */}
-  <input
-    type="text"
-    readOnly
-    value={watch("xraison_0") || ""}
-    className={getInputClass("xraison_0") + " read-only"}
-    tabIndex={-1}
-  />
-
-  {/* Hidden to keep the value in RHF form state */}
-  <input type="hidden" {...register("xraison_0")} />
-</div>
-
-            <div className="sage-row">
-              <label>
-                Transporteur externe ? <span className="sage-required">*</span>
-              </label>
-              <select
-                value={isExternalTransporter ? "Oui" : "Non"}
-                onChange={(e) => {
-                  const isOui = e.target.value === "Oui";
-                  setIsExternalTransporter(isOui);
-                  // Always clear xcamion_0 when switching
-                  setValue("xcamion_0", "", { shouldValidate: false });
-                  // Reset matricule validation state when switching
-                  setIsMatriculeValid(true);
-                  setMatriculeHasBeenTouched(false);
-                }}
-                className="sage-input"
-                disabled={isReadOnly || isEditMode || userRole === "CHEF_PARC"}
-              >
-                <option value="Non">Non</option>
-                <option value="Oui">Oui</option>
-              </select>
-            </div>
-            {isExternalTransporter ? (
+                  tabIndex={-1}
+                />
+              </div>{" "}
               <div className="sage-row">
                 <label>
-                  Matricule client <span className="sage-required">*</span>
+                  Site <span className="sage-required">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={getValues("xcamion_0")}
+                <AutocompleteInput
+                  options={sites.map((site) => ({
+                    id: site.id?.toString() || "",
+                    code: site.site_code || "",
+                    name: site.site_name || "",
+                  }))}
+                  value={getValues("xsite_0")}
                   onChange={(e) => {
-                    let value = e.target.value;
+                    let value =
+                      e && e.target && typeof e.target.value === "string"
+                        ? e.target.value
+                        : e;
 
-                    // Auto-add TC- prefix for external transporter matricule client
-                    if (value && !value.startsWith("TC-")) {
-                      value = "TC-" + value;
-                    }
+                    // Mark site as touched when user starts typing
+                    setSiteHasBeenTouched(true);
 
-                    setValue("xcamion_0", value, {
-                      shouldValidate: true,
-                    });
-                    setMatriculeHasBeenTouched(true);
+                    if (typeof value === "object" && value && value.code) {
+                      // Save the full site code when a suggestion is selected
+                      setValue("xsite_0", value.code, { shouldValidate: true });
+                      setIsSiteValid(true);
+                      setSiteInputError(false);
+                    } else if (typeof value === "string") {
+                      const numericValue = value.replace(/[^0-9]/g, "");
+                      const isNonDigit =
+                        value.length > 0 && /[^0-9]/.test(value);
+                      const matchingSite = sites.find(
+                        (site) => site.site_code === numericValue
+                      );
+                      const noSiteMatch =
+                        numericValue.length > 0 && !matchingSite;
 
-                    // Validate real-time for matricule client
-                    if (!isEditMode && !isReadOnly) {
-                      setIsMatriculeValid(value !== "" && value.trim() !== "");
+                      // Update validation states
+                      const hasError = isNonDigit || noSiteMatch;
+                      setSiteInputError(hasError);
+
+                      // Only mark as invalid if user has entered something invalid
+                      if (numericValue === "") {
+                        setIsSiteValid(true); // Empty is not invalid, just not filled
+                      } else {
+                        setIsSiteValid(matchingSite !== undefined);
+                      }
+
+                      setValue("xsite_0", numericValue, {
+                        shouldValidate: true,
+                      });
                     }
                   }}
+                  onSelect={(selectedOption) => {
+                    setSiteHasBeenTouched(true);
+                    if (selectedOption && selectedOption.code) {
+                      setValue("xsite_0", selectedOption.code, {
+                        shouldValidate: true,
+                      });
+                      setIsSiteValid(true);
+                      setSiteInputError(false);
+                    }
+                  }}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      setSiteInputError(true);
+                      e.preventDefault();
+                    } else {
+                      setSiteInputError(false);
+                    }
+                  }}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  disabled={initialData || isLoadingDropdowns}
                   className={
-                    getInputClass("xcamion_0") +
-                    (matriculeHasBeenTouched &&
-                    !isMatriculeValid &&
-                    !isEditMode &&
-                    !isReadOnly
+                    getInputClass("xsite_0") +
+                    (siteInputError ||
+                    (siteHasBeenTouched &&
+                      !isSiteValid &&
+                      !isEditMode &&
+                      !isReadOnly)
                       ? " sage-input-error"
                       : "")
                   }
-                  onFocus={() => setFocusField("xcamion_0")}
+                  onFocus={() => setFocusField("xsite_0")}
                   onBlur={() => {
                     setFocusField("");
-                    setMatriculeHasBeenTouched(true);
+                    setSiteInputError(false);
+                    setSiteHasBeenTouched(true);
 
-                    // Validate matricule client when field loses focus
-                    const currentValue = getValues("xcamion_0");
+                    // Validate site when field loses focus
+                    const currentSiteValue = getValues("xsite_0");
                     if (!isEditMode && !isReadOnly) {
-                      setIsMatriculeValid(
-                        currentValue !== "" && currentValue.trim() !== ""
-                      );
+                      if (currentSiteValue === "") {
+                        setIsSiteValid(true); // Empty is not invalid, just not filled
+                      } else {
+                        const matchingSite = sites.find(
+                          (site) => site.site_code === currentSiteValue
+                        );
+                        setIsSiteValid(matchingSite !== undefined);
+                      }
                     }
                   }}
-                  autoComplete="off"
-                  disabled={isReadOnly || userRole === "CHEF_PARC"}
+                  searchKeys={["code", "name"]}
+                  displayKeys={["code", "name"]}
+                  primaryKey="code"
+                  noResultsText="Site introuvable"
                 />
-                {errors.xcamion_0 && (
+              </div>{" "}
+              <div className="sage-row">
+                <label>
+                  Client <span className="sage-required">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  {...register("xclient_0")}
+                  value={getValues("xclient_0")}
+                  onChange={(e) => {
+                    const v = e.target.value.trim().toUpperCase();
+                    setClientHasBeenTouched(true);
+                    setValue("xclient_0", v, { shouldValidate: true });
+
+                    if (!isEditMode && !isReadOnly) {
+                      if (v === "") {
+                        clearErrors("xclient_0"); // let Yup handle "required" on submit
+                      } else {
+                        const ok = !!clientsByCode[v];
+                        if (ok) clearErrors("xclient_0");
+                        else
+                          setError("xclient_0", {
+                            type: "manual",
+                            message: "Client introuvable",
+                          });
+                      }
+                    }
+                  }}
+                  onBlur={() => {
+                    setFocusField("");
+                    setClientHasBeenTouched(true);
+                    const v = (getValues("xclient_0") || "")
+                      .trim()
+                      .toUpperCase();
+                    if (!isEditMode && !isReadOnly && v !== "") {
+                      const ok = !!clientsByCode[v];
+                      if (ok) clearErrors("xclient_0");
+                      else
+                        setError("xclient_0", {
+                          type: "manual",
+                          message: "Client introuvable",
+                        });
+                    }
+                  }}
+                  onFocus={() => setFocusField("xclient_0")}
+                  autoComplete="off"
+                  disabled={isReadOnly || isEditMode}
+                  className={getInputClass("xclient_0")}
+                />
+
+                {errors.xclient_0 && (
                   <span className="sage-input-error-text">
-                    {errors.xcamion_0.message}
+                    {errors.xclient_0.message}
                   </span>
                 )}
               </div>
-            ) : (
+              <div className="sage-row">
+                <label>Raison sociale</label>
+
+                {/* Visible, read-only value (auto-filled by the effect) */}
+                <input
+                  type="text"
+                  readOnly
+                  value={watch("xraison_0") || ""}
+                  className={getInputClass("xraison_0") + " read-only"}
+                  tabIndex={-1}
+                />
+
+                {/* Hidden to keep the value in RHF form state */}
+                <input type="hidden" {...register("xraison_0")} />
+              </div>
               <div className="sage-row">
                 <label>
-                  Matricule Camion <span className="sage-required">*</span>
+                  Transporteur externe ?{" "}
+                  <span className="sage-required">*</span>
                 </label>
-                <AutocompleteInput
-                  options={trucks.map((truck) => ({
-                    id: truck.XMAT_0?.toString() || "",
-                    code: truck.XMAT_0 || "",
-                    name: truck.XMAT_0 || "",
-                  }))}
-                  value={getValues("xcamion_0")}
+                <select
+                  value={isExternalTransporter ? "Oui" : "Non"}
                   onChange={(e) => {
-                    const selectedValue = e.target.value;
-                    setMatriculeHasBeenTouched(true);
-
-                    setValue("xcamion_0", selectedValue, {
-                      shouldValidate: false,
-                    });
-
-                    // Validate if the entered value matches any truck code
-                    if (!isEditMode && !isReadOnly) {
-                      if (selectedValue === "") {
-                        setIsMatriculeValid(true); // Empty is not invalid, just not filled
-                      } else {
-                        const matchingTruck = trucks.find(
-                          (truck) => truck.XMAT_0 === selectedValue
-                        );
-                        setIsMatriculeValid(matchingTruck !== undefined);
-                      }
-                    }
+                    const isOui = e.target.value === "Oui";
+                    setIsExternalTransporter(isOui);
+                    // Always clear xcamion_0 when switching
+                    setValue("xcamion_0", "", { shouldValidate: false });
+                    // Reset matricule validation state when switching
+                    setIsMatriculeValid(true);
+                    setMatriculeHasBeenTouched(false);
                   }}
+                  className="sage-input"
                   disabled={
                     isReadOnly || isEditMode || userRole === "CHEF_PARC"
                   }
+                >
+                  <option value="Non">Non</option>
+                  <option value="Oui">Oui</option>
+                </select>
+              </div>
+              {isExternalTransporter ? (
+                <div className="sage-row">
+                  <label>
+                    Matricule client <span className="sage-required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={getValues("xcamion_0")}
+                    onChange={(e) => {
+                      let value = e.target.value;
+
+                      // Auto-add TC- prefix for external transporter matricule client
+                      if (value && !value.startsWith("TC-")) {
+                        value = "TC-" + value;
+                      }
+
+                      setValue("xcamion_0", value, {
+                        shouldValidate: true,
+                      });
+                      setMatriculeHasBeenTouched(true);
+
+                      // Validate real-time for matricule client
+                      if (!isEditMode && !isReadOnly) {
+                        setIsMatriculeValid(
+                          value !== "" && value.trim() !== ""
+                        );
+                      }
+                    }}
+                    className={
+                      getInputClass("xcamion_0") +
+                      (matriculeHasBeenTouched &&
+                      !isMatriculeValid &&
+                      !isEditMode &&
+                      !isReadOnly
+                        ? " sage-input-error"
+                        : "")
+                    }
+                    onFocus={() => setFocusField("xcamion_0")}
+                    onBlur={() => {
+                      setFocusField("");
+                      setMatriculeHasBeenTouched(true);
+
+                      // Validate matricule client when field loses focus
+                      const currentValue = getValues("xcamion_0");
+                      if (!isEditMode && !isReadOnly) {
+                        setIsMatriculeValid(
+                          currentValue !== "" && currentValue.trim() !== ""
+                        );
+                      }
+                    }}
+                    autoComplete="off"
+                    disabled={isReadOnly || userRole === "CHEF_PARC"}
+                  />
+                  {errors.xcamion_0 && (
+                    <span className="sage-input-error-text">
+                      {errors.xcamion_0.message}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="sage-row">
+                  <label>
+                    Matricule Camion <span className="sage-required">*</span>
+                  </label>
+                  <AutocompleteInput
+                    options={trucks.map((truck) => ({
+                      id: truck.XMAT_0?.toString() || "",
+                      code: truck.XMAT_0 || "",
+                      name: truck.XMAT_0 || "",
+                    }))}
+                    value={getValues("xcamion_0")}
+                    onChange={(e) => {
+                      const selectedValue = e.target.value;
+                      setMatriculeHasBeenTouched(true);
+
+                      setValue("xcamion_0", selectedValue, {
+                        shouldValidate: false,
+                      });
+
+                      // Validate if the entered value matches any truck code
+                      if (!isEditMode && !isReadOnly) {
+                        if (selectedValue === "") {
+                          setIsMatriculeValid(true); // Empty is not invalid, just not filled
+                        } else {
+                          const matchingTruck = trucks.find(
+                            (truck) => truck.XMAT_0 === selectedValue
+                          );
+                          setIsMatriculeValid(matchingTruck !== undefined);
+                        }
+                      }
+                    }}
+                    disabled={
+                      isReadOnly || isEditMode || userRole === "CHEF_PARC"
+                    }
+                    className={
+                      "sage-input" +
+                      (matriculeHasBeenTouched &&
+                      !isMatriculeValid &&
+                      !isEditMode &&
+                      !isReadOnly
+                        ? " sage-input-error"
+                        : "")
+                    }
+                    onFocus={() => setFocusField("xcamion_0")}
+                    onBlur={() => {
+                      setFocusField("");
+                      setMatriculeHasBeenTouched(true);
+
+                      // Validate matricule camion when field loses focus
+                      const currentValue = getValues("xcamion_0");
+                      if (!isEditMode && !isReadOnly) {
+                        if (currentValue === "") {
+                          setIsMatriculeValid(true); // Empty is not invalid, just not filled
+                        } else {
+                          const matchingTruck = trucks.find(
+                            (truck) => truck.XMAT_0 === currentValue
+                          );
+                          setIsMatriculeValid(matchingTruck !== undefined);
+                        }
+                      }
+                    }}
+                    register={register("xcamion_0")}
+                    searchKeys={["code", "name"]}
+                    displayKeys={["code"]}
+                    primaryKey="code"
+                    noResultsText="Matricule introuvable"
+                  />
+                </div>
+              )}
+              <div className="sage-row">
+                <label>Date</label>
+                <input
+                  type="text"
+                  value={currentDate}
+                  disabled
+                  className="sage-input"
+                  tabIndex={-1}
+                />
+              </div>
+              <div className="sage-row">
+                <label>Heure</label>
+                <input
+                  type="text"
+                  value={currentTime}
+                  disabled
+                  className="sage-input"
+                  tabIndex={-1}
+                />
+              </div>
+              <div className="sage-row">
+                <label>Validée</label>{" "}
+                <select
+                  {...register("xvalsta_0")}
+                  className={getInputClass("xvalsta_0")}
+                  onFocus={() => setFocusField("xvalsta_0")}
+                  onBlur={() => setFocusField("")}
+                  value={currentValidationStatus}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    // Prevent AGENT_ORDONNANCEMENT from selecting "Oui" (value "2")
+                    if (
+                      userRole === "AGENT_ORDONNANCEMENT" &&
+                      newValue === "2"
+                    ) {
+                      alert(
+                        "Vous n'avez pas l'autorisation de valider directement. Utilisez le bouton 'Validation'."
+                      );
+                      return;
+                    }
+                    setCurrentValidationStatus(newValue);
+                    setValue("xvalsta_0", newValue, {
+                      shouldValidate: true,
+                    });
+                  }}
+                  disabled={isReadOnly || userRole === "CHEF_PARC"}
+                >
+                  <option value="1">Non</option>
+                  {/* Only show "Oui" option if user is not AGENT_ORDONNANCEMENT */}
+                  {userRole !== "AGENT_ORDONNANCEMENT" && (
+                    <option value="2">Oui</option>
+                  )}
+                </select>
+              </div>
+            </div>
+          </div>{" "}
+          <div className="sage-section">
+            <div className="sage-section-title">Lignes</div>
+            <div className="sage-fields">
+              <div className="sage-row">
+                <label>Palettes ramenées</label>
+                <input
+                  type="text"
+                  {...register("palette_ramene")}
                   className={
-                    "sage-input" +
-                    (matriculeHasBeenTouched &&
-                    !isMatriculeValid &&
+                    getInputClass("palette_ramene") +
+                    (paletteRameneHasBeenTouched &&
+                    !isPaletteRameneValid &&
                     !isEditMode &&
                     !isReadOnly
                       ? " sage-input-error"
                       : "")
                   }
-                  onFocus={() => setFocusField("xcamion_0")}
+                  onFocus={() => setFocusField("palette_ramene")}
                   onBlur={() => {
                     setFocusField("");
-                    setMatriculeHasBeenTouched(true);
+                    setPaletteRameneHasBeenTouched(true);
+                  }}
+                  onChange={(e) => {
+                    const value = handleIntegerInput(e); // Clean the input first
+                    setPaletteRameneHasBeenTouched(true);
 
-                    // Validate matricule camion when field loses focus
-                    const currentValue = getValues("xcamion_0");
+                    // Update form state with cleaned value
+                    setValue("palette_ramene", value, {
+                      shouldValidate: true,
+                    });
+
+                    // Validate real-time for palette ramenée
                     if (!isEditMode && !isReadOnly) {
-                      if (currentValue === "") {
-                        setIsMatriculeValid(true); // Empty is not invalid, just not filled
+                      if (value === "") {
+                        setIsPaletteRameneValid(true); // Empty is not invalid, just not filled
                       } else {
-                        const matchingTruck = trucks.find(
-                          (truck) => truck.XMAT_0 === currentValue
+                        const numValue = parseInt(value);
+                        setIsPaletteRameneValid(
+                          !isNaN(numValue) && numValue >= 0
                         );
-                        setIsMatriculeValid(matchingTruck !== undefined);
                       }
                     }
                   }}
-                  register={register("xcamion_0")}
-                  searchKeys={["code", "name"]}
-                  displayKeys={["code"]}
-                  primaryKey="code"
-                  noResultsText="Matricule introuvable"
+                  autoComplete="off"
+                  disabled={
+                    isFormReadOnly ||
+                    (initialData && !isEditMode) ||
+                    (!canModifyBasicFields && userRole !== "ADMIN")
+                  } // Role-based: AGENT_ORDONNANCEMENT can edit, others cannot
                 />
               </div>
-            )}
-            <div className="sage-row">
-              <label>Date</label>
-              <input
-                type="text"
-                value={currentDate}
-                disabled
-                className="sage-input"
-                tabIndex={-1}
-              />
+              <div className="sage-row">
+                <label>
+                  Palettes à déconsigner{" "}
+                  <span className="sage-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  {...register("palette_a_deconsigner")}
+                  className={getInputClass("palette_a_deconsigner")}
+                  onFocus={() => setFocusField("palette_a_deconsigner")}
+                  onBlur={() => {
+                    setFocusField("");
+                  }}
+                  autoComplete="off"
+                  disabled={
+                    isFormReadOnly ||
+                    (initialData && !isEditMode) ||
+                    (!canModifyBasicFields && userRole !== "ADMIN")
+                  } // Role-based: AGENT_ORDONNANCEMENT can edit, others cannot
+                />
+              </div>
+              <div className="sage-row">
+                <label
+                  style={{
+                    display: "block",
+                    wordWrap: "break-word",
+                    whiteSpace: "normal",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  Palettes déconsignées (Conformes)
+                </label>
+                <input
+                  type="text"
+                  {...register("palette_deconsignees")}
+                  className={getInputClass("palette_deconsignees")}
+                  onFocus={() => setFocusField("palette_deconsignees")}
+                  onBlur={() => setFocusField("")}
+                  autoComplete="off"
+                  disabled={
+                    canOnlyValidate ||
+                    (!canModifyPalettesDeconsignees && userRole !== "ADMIN")
+                  } // Role-based: CHEF_PARC can always edit, CAISSIER/CAISSIERE cannot
+                />
+              </div>
             </div>
-            <div className="sage-row">
-              <label>Heure</label>
-              <input
-                type="text"
-                value={currentTime}
-                disabled
-                className="sage-input"
-                tabIndex={-1}
-              />
-            </div>
-            <div className="sage-row">
-              <label>Validée</label>{" "}
-              <select
-                {...register("xvalsta_0")}
-                className={getInputClass("xvalsta_0")}
-                onFocus={() => setFocusField("xvalsta_0")}
-                onBlur={() => setFocusField("")}
-                value={currentValidationStatus}
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  // Prevent AGENT_ORDONNANCEMENT from selecting "Oui" (value "2")
-                  if (userRole === "AGENT_ORDONNANCEMENT" && newValue === "2") {
-                    alert("Vous n'avez pas l'autorisation de valider directement. Utilisez le bouton 'Validation'.");
-                    return;
-                  }
-                  setCurrentValidationStatus(newValue);
-                  setValue("xvalsta_0", newValue, {
-                    shouldValidate: true,
-                  });
-                }}
-                disabled={isReadOnly || userRole === "CHEF_PARC"}
-              >
-                <option value="1">Non</option>
-                {/* Only show "Oui" option if user is not AGENT_ORDONNANCEMENT */}
-                {userRole !== "AGENT_ORDONNANCEMENT" && (
-                  <option value="2">Oui</option>
-                )}
-              </select>
-            </div>
-          </div>
-        </div>{" "}
-        <div className="sage-section">
-          <div className="sage-section-title">Lignes</div>
-          <div className="sage-fields">
-            <div className="sage-row">
-              <label>Palettes ramenées</label>
-              <input
-                type="text"
-                {...register("palette_ramene")}
-                className={
-                  getInputClass("palette_ramene") +
-                  (paletteRameneHasBeenTouched &&
-                  !isPaletteRameneValid &&
-                  !isEditMode &&
-                  !isReadOnly
-                    ? " sage-input-error"
-                    : "")
-                }
-                onFocus={() => setFocusField("palette_ramene")}
-                onBlur={() => {
-                  setFocusField("");
-                  setPaletteRameneHasBeenTouched(true);
-                }}
-                onChange={(e) => {
-                  const value = handleIntegerInput(e); // Clean the input first
-                  setPaletteRameneHasBeenTouched(true);
-
-                  // Update form state with cleaned value
-                  setValue("palette_ramene", value, {
-                    shouldValidate: true,
-                  });
-
-                  // Validate real-time for palette ramenée
-                  if (!isEditMode && !isReadOnly) {
-                    if (value === "") {
-                      setIsPaletteRameneValid(true); // Empty is not invalid, just not filled
-                    } else {
-                      const numValue = parseInt(value);
-                      setIsPaletteRameneValid(
-                        !isNaN(numValue) && numValue >= 0
-                      );
-                    }
-                  }
-                }}
-                autoComplete="off"
-                disabled={
-                  isFormReadOnly ||
-                  (initialData && !isEditMode) ||
-                  (!canModifyBasicFields && userRole !== "ADMIN")
-                } // Role-based: AGENT_ORDONNANCEMENT can edit, others cannot
-              />
-            </div>
-            <div className="sage-row">
-              <label>
-                Palettes à déconsigner <span className="sage-required">*</span>
-              </label>
-              <input
-                type="text"
-                {...register("palette_a_deconsigner")}
-                className={getInputClass("palette_a_deconsigner")}
-                onFocus={() => setFocusField("palette_a_deconsigner")}
-                onBlur={() => {
-                  setFocusField("");
-                }}
-                autoComplete="off"
-                disabled={
-                  isFormReadOnly ||
-                  (initialData && !isEditMode) ||
-                  (!canModifyBasicFields && userRole !== "ADMIN")
-                } // Role-based: AGENT_ORDONNANCEMENT can edit, others cannot
-              />
-            </div>
-            <div className="sage-row">
-              <label>Palettes déconsignées (Conformes)</label>
-              <input
-                type="text"
-                {...register("palette_deconsignees")}
-                className={getInputClass("palette_deconsignees")}
-                onFocus={() => setFocusField("palette_deconsignees")}
-                onBlur={() => setFocusField("")}
-                autoComplete="off"
-                disabled={
-                  canOnlyValidate ||
-                  (!canModifyPalettesDeconsignees && userRole !== "ADMIN")
-                } // Role-based: CHEF_PARC can always edit, CAISSIER/CAISSIERE cannot
-              />
-            </div>
-          </div>
-        </div> <br></br>  
+          </div>{" "}
+          <br></br>
         </div>
       </form>
     );
@@ -1414,10 +1415,3 @@ useEffect(() => {
 );
 
 export default DECONSIGNForm;
-
-// Ajout CSS local pour le scroll si non déjà présent
-// À placer dans le fichier CSS importé ou en style inline :
-// .form-scrollable { max-height: 75vh; overflow-y: auto; padding-right: 8px; }
-
-// Pour appliquer le scroll, entourez le contenu du formulaire par :
-// <div className="form-scrollable"> ...formulaire... </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import ptHomeBg from "../assets/pt_home_bg.png";
+import ptHomeBg from "../assets/palette-bois-bg.jpg";
 import {
   FaUserShield,
   FaCashRegister,
