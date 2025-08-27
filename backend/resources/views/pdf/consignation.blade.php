@@ -10,14 +10,16 @@
     body{
       width: 145.620mm;              /* 550.3732 px */
       margin: 3.440mm auto;          /* 13 px */
-      font-family: Arial, "DejaVu Sans", sans-serif;
-      font-size: 10px;
+      font-family: "Dax", Arial, "DejaVu Sans", sans-serif;
+      font-size: 10.7762px;          /* 10.7762 px as specified */
       color: #000;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
 
-    .bold{font-weight:bold}
+    .bold{font-weight:bold; font-family: "Dax-Bold", "Dax", Arial, sans-serif;}
+    .light{font-weight:300; font-family: "Dax-Light", "Dax", Arial, sans-serif;}
+    .medium{font-weight:500; font-family: "Dax-Medium", "Dax", Arial, sans-serif;}
     .italic{font-style:italic}
     .center{text-align:center}
     .right{text-align:right}
@@ -48,23 +50,68 @@
       white-space:nowrap; overflow:hidden;
       display:block; background:#fff; color:#000; text-align:center;
     }
-    .bx.lbl{ background:#1a2c50; color:#fff; position:relative; }
+    .bx.lbl{ 
+      background:#1a2c50; 
+      color:#fff; 
+      position:relative; 
+      font-family: "Dax-Bold", "Dax", Arial, sans-serif;
+      font-size: 10.7762px;
+    }
     .bx.lbl.c::after{
       content:":"; position:absolute; right:0.50mm; top:0; height:100%; line-height:7.354mm;
     }
     /* ultra-tight padding for narrow value boxes so text fits without changing outer size */
-    .bx.val-sm{ padding:0 0.10mm; }
+    .bx.val-sm{ 
+      padding:0 0.10mm; 
+      font-family: "Dax-Light", "Dax", Arial, sans-serif;
+      font-size: 10.7762px;
+    }
 
     /* Right column stacked blocks */
     .right-block{ width:72.231mm; }      /* 272.9978 px */
     .right-head{ padding:0 1.500mm; }
-    .right-body{ border:0.264mm solid #1a2c50; padding:0 2mm; white-space:nowrap; }
+    .right-body{ 
+      border:0.264mm solid #1a2c50; 
+      padding:0 2mm; 
+      white-space:nowrap; 
+      font-family: "Dax-Medium", "Dax", Arial, sans-serif;
+      font-size: 10.7762px;
+    }
 
     /* Visa section */
     table.visa { table-layout:fixed; border-collapse:separate; border-spacing:0 }
-    .visa .cell { border:0.264mm solid #1a2c50; text-align:center; font-size:14px; }
-    .visa .head .cell { background:#1a2c50; color:#fff; font-weight:bold; height:7.354mm; line-height:7.354mm }
+    .visa .cell { border:0.264mm solid #1a2c50; text-align:center; font-size:10.7762px; }
+    .visa .head .cell { 
+      background:#1a2c50; 
+      color:#fff; 
+      font-weight:bold; 
+      height:7.354mm; 
+      line-height:7.354mm;
+      font-family: "Dax-Bold", "Dax", Arial, sans-serif;
+      font-size: 10.7762px;
+    }
     .visa .box  .cell { height:13.301mm }  /* 50.2703 px */
+
+    /* Main title styling */
+    .main-title {
+      font-family: "Dax-Bold", "Dax", Arial, sans-serif;
+      font-size: 15.1719px;
+      font-weight: bold;
+    }
+
+    /* Document number styling */
+    .doc-number {
+      font-family: "Dax-Bold", "Dax", Arial, sans-serif;
+      font-size: 15.1719px;
+      font-weight: bold;
+    }
+
+    /* Section titles in right column */
+    .section-title {
+      font-family: "Dax-Bold", "Dax", Arial, sans-serif;
+      font-size: 10.7762px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -75,13 +122,13 @@
   <table style="margin-bottom:3.440mm">
     <tr>
       <td style="width:34.395mm"><img src="{{ public_path('logo.png') }}" alt="logo" style="width:34.395mm"></td>
-      <td class="right" style="font-size:12px">{{ now()->format('d/m/Y H:i:s') }}</td>
+      <td class="right light" style="font-size:10.7762px">{{ now()->format('d/m/Y H:i:s') }}</td>
     </tr>
   </table>
 
   <!-- Title -->
   <table>
-    <tr class="blue h35 center bold"><td>Bon de consignation palettes</td></tr>
+    <tr class="blue h35 center"><td class="main-title">Bon de consignation palettes</td></tr>
   </table>
 
   <table class="gaprow"><tr><td></td></tr></table>
@@ -91,7 +138,7 @@
     <tr>
       <td>
         <div class="bx" style="width:145.620mm; height:9.494mm; line-height:9.494mm; border-color:#000;">
-          <span class="bold">N° {{ $consignation->xnum_0 }}</span>
+          <span class="doc-number">N° {{ $consignation->xnum_0 }}</span>
         </div>
       </td>
     </tr>
@@ -133,7 +180,7 @@
           </colgroup>
           <tr>
             <td><div class="bx lbl c" style="width:15.261mm">Client</div></td><td class="gap3"></td>
-            <td><div class="bx"       style="width:55.988mm; text-align:center">
+            <td><div class="bx val-sm"       style="width:55.988mm; text-align:center">
               {{ $consignation->xclient_0 }} - {{ $consignation->xraison_0 }}
             </div></td><td></td>
           </tr>
@@ -149,21 +196,35 @@
           </colgroup>
           <tr>
             <td><div class="bx lbl c" style="width:55.614mm">Nb palettes ramenées</div></td><td class="gap3"></td>
-            <td><div class="bx"       style="width:15.635mm">{{ $consignation->palette_ramene }} <span class="italic">pal</span></div></td><td></td>
+            <td><div class="bx val-sm"       style="width:15.635mm">{{ $consignation->palette_ramene }} <span class="italic">pal</span></div></td><td></td>
           </tr>
         </table>
 
         <table class="gaprow"><tr><td></td></tr></table>
 
-        <!-- Nb palettes à consigner (3px gap) -->
+        <!-- Nb palettes à déconsigner (3px gap) -->
         <table style="width:73.341mm">
           <colgroup>
             <col style="width:55.614mm"><col class="gap3">
             <col style="width:15.635mm"><col style="width:1.298mm">
           </colgroup>
           <tr>
-            <td><div class="bx lbl c" style="width:55.614mm">Nb palettes à consigner</div></td><td class="gap3"></td>
-            <td><div class="bx"       style="width:15.635mm">{{ $consignation->palette_consigner }} <span class="italic">pal</span></div></td><td></td>
+            <td><div class="bx lbl c" style="width:55.614mm">Nb palettes à déconsigner</div></td><td class="gap3"></td>
+            <td><div class="bx val-sm"       style="width:15.635mm">{{ $consignation->palette_consigner }} <span class="italic">pal</span></div></td><td></td>
+          </tr>
+        </table>
+
+        <table class="gaprow"><tr><td></td></tr></table>
+
+        <!-- Nb palettes déconsignées ( conformes ) -->
+        <table style="width:73.341mm">
+          <colgroup>
+            <col style="width:55.614mm"><col class="gap3">
+            <col style="width:15.635mm"><col style="width:1.298mm">
+          </colgroup>
+          <tr>
+            <td><div class="bx lbl c" style="width:55.614mm">Nb palettes déconsignées ( conformes )</div></td><td class="gap3"></td>
+            <td><div class="bx val-sm"       style="width:15.635mm">{{ $consignation->palette_consigner ?? '0' }} <span class="italic">pal</span></div></td><td></td>
           </tr>
         </table>
 
@@ -174,7 +235,7 @@
             <td>
               <div class="bx" style="width:73.341mm; text-align:left; padding-left:6px">
                 <span class="bold">Bon de prélèvement :</span>
-                &nbsp;<span class="nowrap">{{ $consignation->xbp_0 ?? 'N/A' }}</span>
+                &nbsp;<span class="nowrap light">{{ $consignation->xbp_0 ?? 'N/A' }}</span>
               </div>
             </td>
           </tr>
@@ -193,34 +254,34 @@
           </colgroup>
           <tr>
             <td><div class="bx lbl c" style="width:18.003mm">Matricule</div></td><td class="gap3"></td>
-            <td><div class="bx"       style="width:53.291mm">{{ $consignation->xcamion_0 }}</div></td><td class="fill0143"></td>
+            <td><div class="bx val-sm"       style="width:53.291mm">{{ $consignation->xcamion_0 }}</div></td><td class="fill0143"></td>
           </tr>
         </table>
 
         <table class="gaprow"><tr><td></td></tr></table>
 
-        <!-- Total palettes consignées -->
+        <!-- Total palettes consignées - First section -->
         <table class="right-block">
-          <tr><td><div class="bx" style="width:72.231mm; background:#1a2c50; color:#fff; border-color:#1a2c50">Total palettes consignées :</div></td></tr>
+          <tr><td><div class="bx section-title" style="width:72.231mm; background:#1a2c50; color:#fff; border-color:#1a2c50">Total palettes consignées :</div></td></tr>
           <tr class="gaprow"><td></td></tr>
           <tr><td>
             <div class="right-body h28" style="width:72.231mm">
-              <span class="italic">Avant ce bon :</span> <span class="nowrap">{{ $before_palettes ?? '0' }} pal</span>
+              <span class="medium">Avant ce bon :</span> <span class="nowrap light">{{ $before_palettes ?? '0' }} pal</span>
               &nbsp;&nbsp;&nbsp;&nbsp;
-              <span class="italic">Après ce bon :</span> <span class="nowrap">{{ $after_palettes ?? '0' }} pal</span>
+              <span class="medium">Après ce bon :</span> <span class="nowrap light">{{ $after_palettes ?? '0' }} pal</span>
             </div>
           </td></tr>
         </table>
 
-        <!-- Caution Caisse -->
+        <!-- Total palettes consignées - Second section (identical) -->
         <table class="right-block" style="margin-top:0.794mm">
-          <tr><td><div class="bx" style="width:72.231mm; background:#1a2c50; color:#fff; border-color:#1a2c50">Caution Caisse</div></td></tr>
+          <tr><td><div class="bx section-title" style="width:72.231mm; background:#1a2c50; color:#fff; border-color:#1a2c50">Total palettes consignées :</div></td></tr>
           <tr class="gaprow"><td></td></tr>
           <tr><td>
             <div class="right-body h28" style="width:72.231mm">
-              <span class="italic">Avant ce bon :</span> <span class="nowrap">{{ $caution_before ?? '0.00' }} pal</span>
+              <span class="medium">Avant ce bon :</span> <span class="nowrap light">{{ $before_palettes ?? '0' }} pal</span>
               &nbsp;&nbsp;&nbsp;&nbsp;
-              <span class="italic">Après ce bon :</span> <span class="nowrap">{{ $caution_after ?? '0.00' }} pal</span>
+              <span class="medium">Après ce bon :</span> <span class="nowrap light">{{ $after_palettes ?? '0' }} pal</span>
             </div>
           </td></tr>
         </table>
@@ -238,8 +299,8 @@
       <col style="width:35.530mm">
     </colgroup>
     <tr class="head">
-      <td class="cell">Visa Opérateur</td><td></td>
-      <td class="cell">Visa Sécurité</td><td></td>
+      <td class="cell">Visa Operateur</td><td></td>
+      <td class="cell">Visa Securite</td><td></td>
       <td class="cell">Visa Menuisier</td><td></td>
       <td class="cell">Visa Parc</td>
     </tr>

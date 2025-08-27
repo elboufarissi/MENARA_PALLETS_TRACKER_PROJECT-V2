@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import ptHomeBg from "../assets/palette-bois-bg.jpg";
@@ -9,8 +9,10 @@ import {
   FaFileInvoice,
   FaUsers,
   FaClipboardCheck,
+  FaKey,
 } from "react-icons/fa";
 import NotificationBell from "../components/NotificationBell";
+import ChangePasswordModal from "../components/ChangePasswordModal";
 
 const roleColors = {
   ADMIN: "#d32f2f",
@@ -68,6 +70,7 @@ const cardData = [
 
 export default function Home() {
   const { user, logout } = useAuth();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const role = user?.ROLE;
 
   const roleLabel =
@@ -163,6 +166,40 @@ export default function Home() {
 
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <NotificationBell userRole={user?.ROLE} />
+
+          {/* Change Password Button - Only for non-admin users */}
+          {role !== "ADMIN" && (
+            <button
+              onClick={() => setIsPasswordModalOpen(true)}
+              style={{
+                background: "#252D4B",
+                color: "#fff",
+                border: "none",
+                borderRadius: 12,
+                padding: "10px 20px",
+                fontSize: 16,
+                fontWeight: 600,
+                cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.5)",
+                transition: "all 0.3s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.1)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.6)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.5)";
+              }}
+            >
+              <FaKey />
+              Changer mot de passe
+            </button>
+          )}
+
           <button
             onClick={logout}
             style={{
@@ -258,6 +295,15 @@ export default function Home() {
             </Link>
           ))}
       </div>
+
+      {/* Password Change Modal */}
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        onSuccess={() => {
+          // Optional: You can add additional success handling here
+        }}
+      />
     </div>
   );
 }

@@ -20,7 +20,7 @@ const Login = () => {
 
     try {
       await login(username, password);
-      navigate("/dashboard"); // Redirige après login
+      navigate("/home"); // Redirige après login
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials");
     } finally {
@@ -29,7 +29,7 @@ const Login = () => {
   };
 
   return (
-    <div style={{overflowY: 'auto', maxHeight: '100vh'}}>
+    <div style={{ overflowY: "auto", maxHeight: "100vh" }}>
       <div className="login-bg">
         <img src={bgImage} alt="background" />
       </div>

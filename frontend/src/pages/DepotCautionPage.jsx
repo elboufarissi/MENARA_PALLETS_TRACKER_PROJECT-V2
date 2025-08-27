@@ -14,14 +14,19 @@ const DepotCautionPage = () => {
   const [selectedCaution, setSelectedCaution] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false); // Separate state for refresh operations
   const [error, setError] = useState(null);
   const formRef = useRef();
   const { xnum_0 } = useParams();
   const { user } = useAuth();
 
-  const fetchCautions = useCallback(async () => {
-    setIsLoading(true);
+  // Optimized fetch function with parallel API calls
+  const fetchCautions = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setIsRefreshing(true);
+    }
     setError(null);
+    
     try {
       const response = await api.get("/xcaution");
       console.log("Fetched cautions:", response.data);
@@ -31,23 +36,33 @@ const DepotCautionPage = () => {
       console.error("Failed to fetch cautions:", e);
       setAllCautions([]);
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
+  // Optimized initial data loading with parallel requests
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
+      
       try {
-        // 1. Charger toutes les cautions pour la table
-        const allResponse = await api.get("/xcaution");
-        setAllCautions(allResponse.data);
+        // Make parallel API calls instead of sequential
+        const promises = [
+          api.get("/xcaution"),
+          ...(xnum_0 ? [api.get(`/xcaution/${xnum_0}`)] : [])
+        ];
 
-        // 2. Si un code est dans l'URL, charger cette caution
-        if (xnum_0) {
-          const oneResponse = await api.get(`/xcaution/${xnum_0}`);
-          setSelectedCaution(oneResponse.data);
+        const results = await Promise.all(promises);
+        
+        // Set all cautions from first result
+        setAllCautions(results[0].data);
+        
+        // Set selected caution if URL parameter exists
+        if (xnum_0 && results.length > 1) {
+          setSelectedCaution(results[1].data);
           setIsEditMode(false);
         }
       } catch (e) {
@@ -63,7 +78,8 @@ const DepotCautionPage = () => {
 
   const handleFormSuccess = () => {
     console.log("Form submission successful, refetching cautions...");
-    fetchCautions();
+    // Use refresh loading instead of full loading
+    fetchCautions(true);
     setSelectedCaution(null);
     setIsEditMode(false);
   };
@@ -91,7 +107,7 @@ const DepotCautionPage = () => {
     setIsEditMode(true);
   };
 
-  // Handler for delete (remove from backend and refresh)
+  // Optimized delete with optimistic update
   const handleDeleteCaution = async (caution) => {
     if (!caution || !caution.xnum_0) return;
     if (
@@ -100,12 +116,26 @@ const DepotCautionPage = () => {
       )
     )
       return;
+
+    // Optimistic update - remove from UI immediately
+    const originalCautions = [...allCautions];
+    const updatedCautions = allCautions.filter(c => c.xnum_0 !== caution.xnum_0);
+    setAllCautions(updatedCautions);
+    
+    if (selectedCaution?.xnum_0 === caution.xnum_0) {
+      setSelectedCaution(null);
+    }
+
     try {
       await api.delete(`/xcaution/${encodeURIComponent(caution.xnum_0)}`);
-      fetchCautions();
-      setSelectedCaution(null);
       alert("Caution supprimée avec succès.");
     } catch (e) {
+      // Rollback on error
+      setAllCautions(originalCautions);
+      if (selectedCaution?.xnum_0 === caution.xnum_0) {
+        setSelectedCaution(caution);
+      }
+      
       let msg = "Erreur lors de la suppression.";
       if (e.response?.data?.message) {
         msg += "\n" + e.response.data.message;
@@ -116,7 +146,7 @@ const DepotCautionPage = () => {
     }
   };
 
-  // Handler to validate caution (change xvalsta_0 from 1 to 2)
+  // Optimized validation with optimistic update
   const handleValidateCaution = async (caution) => {
     if (!caution || !caution.xnum_0) {
       alert("Veuillez sélectionner une caution à valider.");
@@ -128,8 +158,17 @@ const DepotCautionPage = () => {
       return;
     }
 
+    // Optimistic update - update UI immediately
+    const updatedCaution = { ...caution, xvalsta_0: 2 };
+    setSelectedCaution(updatedCaution);
+    
+    const originalCautions = [...allCautions];
+    const updatedCautions = allCautions.map(c => 
+      c.xnum_0 === caution.xnum_0 ? updatedCaution : c
+    );
+    setAllCautions(updatedCautions);
+
     try {
-      // Make PUT request to validate the caution
       const response = await api.put(
         `/xcaution/${encodeURIComponent(caution.xnum_0)}`,
         {
@@ -141,16 +180,11 @@ const DepotCautionPage = () => {
 
       console.log("Caution validation successful:", response.data);
       alert("Caution validée avec succès!");
-
-      // Refresh the cautions list
-      fetchCautions();
-
-      // Update the selected caution to show it's validated
-      setSelectedCaution({
-        ...caution,
-        xvalsta_0: 2,
-      });
     } catch (e) {
+      // Rollback on error
+      setSelectedCaution(caution);
+      setAllCautions(originalCautions);
+      
       console.error("Failed to validate caution:", e);
       let msg = "Erreur lors de la validation de la caution.";
       if (e.response?.data?.errors) {
@@ -217,6 +251,11 @@ const DepotCautionPage = () => {
             {isLoading && (
               <p className="text-center mt-3" style={{ fontSize: "0.95rem" }}>
                 Chargement des cautions...
+              </p>
+            )}
+            {isRefreshing && !isLoading && (
+              <p className="text-center mt-3" style={{ fontSize: "0.95rem", color: "#666" }}>
+                Actualisation...
               </p>
             )}
             {error && (
