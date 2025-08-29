@@ -141,7 +141,7 @@ useEffect(() => {
   // Handler to trigger form submit from sidebar (save/edit)
   const handleSaveForm = () => {
     if (formRef.current) {
-      formRef.current();
+      formRef.current.submit();
     }
   };
 

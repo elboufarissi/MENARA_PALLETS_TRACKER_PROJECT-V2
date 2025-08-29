@@ -9,7 +9,7 @@ class Camion extends Model
 {
     use HasFactory;
 
-    protected $connection = 'sqlsrv';
+    protected $connection = 'sqlsrv_erp';
      protected $table = 'xcamion';
 
     protected $fillable = [

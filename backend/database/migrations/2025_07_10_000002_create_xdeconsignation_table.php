@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -16,12 +17,14 @@ return new class extends Migration
             $table->string('xmatricule_0')->nullable();
             $table->string('xcamion_0', 50)->nullable();
             $table->date('xdate_0')->nullable();
-            $table->string('xheure_0', 10)->nullable();
+            $table->string('xheure_0', 0)->nullable();
             $table->integer('palette_ramene')->nullable();
             $table->integer('palette_a_deconsigner')->nullable();
             $table->integer('palette_deconsignees')->nullable();
             $table->integer('xvalsta_0')->default(1);
-            $table->timestamps();
+             $table->dateTime('created_at', 7)->nullable()->default(DB::raw('SYSUTCDATETIME()'));
+           $table->dateTime('updated_at', 7)->nullable()->default(DB::raw('SYSUTCDATETIME()'));
+
         });
     }
 
@@ -29,4 +32,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('xdeconsignation');
     }
-}; 
+};

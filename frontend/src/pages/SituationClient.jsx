@@ -139,6 +139,21 @@ const clientsByCode = useMemo(() => {
             <LoadingOverlay show={isLoading} text="Chargement en cours..." />
             <h3>Critères</h3>
             <div className="form-row">
+              <label>
+                Site <span className="required">*</span>
+              </label>
+              <div className="input-wrapper">
+                <AutocompleteInput
+                  value={site}
+                  onChange={(e) => setSite(e.target.value)}
+                  onSelect={(option) => setSite(option.code)}
+                  options={siteOptionsFormatted}
+                  displayKeys={["code", "name"]}
+                  primaryKey="code"
+                />
+              </div>
+            </div>
+            <div className="form-row">
   <label>
     Client <span className="required">*</span>
   </label>
@@ -199,21 +214,7 @@ const clientsByCode = useMemo(() => {
               </div>
             </div>
 
-            <div className="form-row">
-              <label>
-                Site <span className="required">*</span>
-              </label>
-              <div className="input-wrapper">
-                <AutocompleteInput
-                  value={site}
-                  onChange={(e) => setSite(e.target.value)}
-                  onSelect={(option) => setSite(option.code)}
-                  options={siteOptionsFormatted}
-                  displayKeys={["code", "name"]}
-                  primaryKey="code"
-                />
-              </div>
-            </div>
+            
 
             <div className="form-row">
               <button onClick={handleFetchSituation}>OK</button>

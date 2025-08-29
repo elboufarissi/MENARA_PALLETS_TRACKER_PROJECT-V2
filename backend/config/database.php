@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'sqlsrv'),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -77,22 +78,39 @@ return [
             'search_path' => 'public',
             'sslmode' => 'prefer',
         ],
+       'sqlsrv' => [
+    'driver' => 'sqlsrv',
+    'host' => env('SQLSRV_HOST', 'localhost'),
+    'port' => env('SQLSRV_PORT', '1433'),
+    'database' => env('SQLSRV_DATABASE', 'forge'),
+    'username' => env('SQLSRV_USERNAME', 'forge'),
+    'password' => env('SQLSRV_PASSWORD', ''),
+    'charset' => 'utf8',
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'options' => [
+        'Encrypt' => env('SQLSRV_ENCRYPT', false) ? true : false,
+        'TrustServerCertificate' => true,
+    ],
+],
 
-        'sqlsrv' => [
-            'driver' => 'sqlsrv',
-            'host' => env('SQLSRV_HOST', 'localhost'),
-            'port' => env('SQLSRV_PORT', '1433'),
-            'database' => env('SQLSRV_DATABASE', 'forge'),
-            'username' => env('SQLSRV_USERNAME', 'forge'),
-            'password' => env('SQLSRV_PASSWORD', ''),
-            'charset' => 'utf8',
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'options' => [
-                'Encrypt' => env('SQLSRV_ENCRYPT', false) ? true : false,
-                'TrustServerCertificate' => true,
-            ],
-        ],
+'sqlsrv_erp' => [
+    'driver' => 'sqlsrv',
+    'host' => env('SQLSRV_SECOND_HOST', 'localhost'),
+    'port' => env('SQLSRV_SECOND_PORT', '1433'),
+    'database' => env('SQLSRV_SECOND_DATABASE', 'forge'),
+    'username' => env('SQLSRV_SECOND_USERNAME', 'forge'),
+    'password' => env('SQLSRV_SECOND_PASSWORD', ''),
+    'charset' => 'utf8',
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'options' => [
+        'Encrypt' => env('SQLSRV_ENCRYPT', false) ? true : false,
+        'TrustServerCertificate' => true,
+    ],
+],
+
+
 
     ],
 

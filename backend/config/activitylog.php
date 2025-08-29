@@ -27,5 +27,5 @@ return [
 
     // IMPORTANT: force to a real connection name (e.g., "mysql", "sqlsrv").
     // Default to mysql so it doesn't accidentally use sqlsrv as the app default.
-    'database_connection' => env('ACTIVITY_LOGGER_DB_CONNECTION', 'mysql'),
+    'database_connection' => env('ACTIVITY_LOGGER_DB_CONNECTION', 'sqlsrv'),
 ];

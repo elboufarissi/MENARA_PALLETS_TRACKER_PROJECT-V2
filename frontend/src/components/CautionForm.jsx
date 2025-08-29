@@ -1025,7 +1025,7 @@ useEffect(() => {
         }, 1000);
       }}
       autoComplete="off"
-      disabled={!!initialData && !isEditMode}
+      disabled={!!initialData}
       className={
         getInputClass("xclient_0") +
         (errors.xclient_0 ? " sage-input-error" : "")

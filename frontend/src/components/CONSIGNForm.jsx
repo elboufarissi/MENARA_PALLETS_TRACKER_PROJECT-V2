@@ -1131,7 +1131,7 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
         }, 1000);
       }}
       autoComplete="off"
-      disabled={!!initialData && !isEditMode}
+      disabled={!!initialData}
       className={
         getInputClass("xclient_0") +
         (errors.xclient_0 ? " sage-input-error" : "")

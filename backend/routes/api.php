@@ -86,7 +86,7 @@ Route::apiResource('camions', CamionController::class);
 // Endpoint to fetch confirmed PV/AG deliveries
 Route::get('sdeliveries', function () {
     try {
-        $deliveries = DB::connection('sqlsrv')->select(
+        $deliveries = DB::connection('sqlsrv_erp')->select(
             "SELECT SDHNUM_0 FROM SDELIVERY WHERE CFMFLG_0 = 1 AND SOHTYP_0 IN ('PV','AG')"
         );
 
@@ -108,7 +108,7 @@ Route::get('sdeliveries', function () {
 Route::get('xcamions', function () {
     try {
         // 🔧 Connexion forcée à SQL Server
-        $trucks = DB::connection('sqlsrv')->select(
+        $trucks = DB::connection('sqlsrv_erp')->select(
             "SELECT XMAT_0 FROM XCAMION WHERE ENAFLG_0=2"
         );
 

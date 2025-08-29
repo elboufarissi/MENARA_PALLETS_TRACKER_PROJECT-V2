@@ -714,11 +714,11 @@ $afterPalettes = $beforePalettes + $currentPalettes;
             ], 422);
         }
 
-        if (!Schema::connection('sqlsrv')->hasTable('SDELIVERY')) {
+        if (!Schema::connection('sqlsrv_erp')->hasTable('SDELIVERY')) {
             return response()->json(['success' => true, 'data' => []]);
         }
 
-        $rows = DB::connection('sqlsrv')->table('SDELIVERY')
+        $rows = DB::connection('sqlsrv_erp')->table('SDELIVERY')
             ->select('SDHNUM_0','BPINAM_0','SOHTYP_0','BPCORD_0','STOFCY_0')
             ->where('CFMFLG_0', 1)
             ->whereIn('SOHTYP_0', ['PV','AG'])

@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BpCustomer extends Model
 {
-    protected $connection = 'sqlsrv';
+    protected $connection = 'sqlsrv_erp';
     protected $table = 'BPCUSTOMER';  // Fixed: table name is bpcustomer, not bp_customer
     protected $primaryKey = 'BPCNUM_0';
     public $incrementing = false;     // Primary key is not auto-incrementing
