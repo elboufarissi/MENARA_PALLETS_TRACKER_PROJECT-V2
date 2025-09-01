@@ -22,21 +22,21 @@ class DeconsignationController extends Controller
      * Display a listing of deconsignations.
      */
     public function index(): JsonResponse
-    {
-        try {
-            // Order by creation date descending to show newest deconsignations first (like consignations)
-            $deconsignations = Deconsignation::orderBy('created_at', 'desc')
-                ->get();
+{
+    try {
+        // Récupère les déconsignations avec pagination (5 par page)
+        $deconsignations = Deconsignation::orderBy('created_at', 'desc')
+            ->paginate(5);
 
-            return response()->json($deconsignations);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erreur lors de la récupération des déconsignations',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
+        return response()->json($deconsignations);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Erreur lors de la récupération des déconsignations',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
     }
+}
 
     /**
      * Store a newly created deconsignation.

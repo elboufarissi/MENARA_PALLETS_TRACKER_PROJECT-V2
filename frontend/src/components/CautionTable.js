@@ -1,22 +1,14 @@
-import React from "react";
-import "./CautionTable.css";
-import { FaFilter, FaRegCalendarAlt } from "react-icons/fa";
+import React, { useState, useEffect } from "react"
+import "./CautionTable.css"
+import { FaFilter, FaRegCalendarAlt } from "react-icons/fa"
 
-const CautionTable = ({
-  cautions = [],
-  onRowClick,
-  onFilterIconClick,
-  onDateFilterIconClick,
-}) => {
-  if (!cautions) {
-    cautions = [];
-  }
-
-  const handleRowClick = (caution) => {
-    if (onRowClick) {
-      onRowClick(caution);
-    }
-  };
+const CautionTable = ({ onRowClick, onFilterIconClick, onDateFilterIconClick }) => {
+  const [cautions, setCautions] = useState({
+    data: [],
+    current_page: 1,
+    last_page: 1,
+  })
+  const [currentPage, setCurrentPage] = useState(1)
 
   const columns = [
     { key: "xnum_0", label: "Caution" },
@@ -27,10 +19,44 @@ const CautionTable = ({
     { key: "xdate_0", label: "Date" },
     { key: "montant", label: "Montant" },
     { key: "xvalsta_0", label: "Validée" },
-  ];
+  ]
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+
+    if (!token) {
+      console.error("⚠ Aucun token trouvé, impossible d’appeler l’API.")
+      return
+    }
+
+    fetch(`http://127.0.0.1:8000/api/xcaution?page=${currentPage}`, {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // 🔑 toujours avec "Bearer"
+      },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text()
+          throw new Error(`Erreur API: ${res.status} - ${errorText}`)
+        }
+        return res.json()
+      })
+      .then((data) => {
+        console.log("✅ API Response:", data) // 👉 vérifie la structure ici
+        setCautions(data)
+      })
+      .catch((err) => console.error("Erreur API cautions:", err))
+  }, [currentPage])
+
+  const handleRowClick = (caution) => {
+    if (onRowClick) onRowClick(caution)
+  }
+
   return (
     <div style={{ padding: 0, margin: 0 }}>
-      <h4>Derniers lus</h4>
+      <h4>Dernières cautions</h4>
       <div className="table-responsive">
         <table className="table table-striped table-hover table-sm table-bordered custom-table-style">
           <thead>
@@ -49,7 +75,6 @@ const CautionTable = ({
                       onClick={() =>
                         onDateFilterIconClick && onDateFilterIconClick(col.key)
                       }
-                      title={`Filtrer ${col.label}`}
                     >
                       <FaRegCalendarAlt />
                     </button>
@@ -60,7 +85,6 @@ const CautionTable = ({
                       onClick={() =>
                         onFilterIconClick && onFilterIconClick(col.key)
                       }
-                      title={`Filtrer ${col.label}`}
                     >
                       <FaFilter />
                     </button>
@@ -70,40 +94,25 @@ const CautionTable = ({
             </tr>
           </thead>
           <tbody>
-            {cautions.length === 0 ? (
+            {!cautions.data || cautions.data.length === 0 ? (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  style={{ textAlign: "center" }}
-                  className="py-3"
-                >
-                  Aucune donnée disponible.
+                <td colSpan={columns.length} className="text-center">
+                  Aucune caution trouvée
                 </td>
               </tr>
             ) : (
-              cautions.map((caution) => (
+              cautions.data.map((caution, idx) => (
                 <tr
-                  key={caution.xnum_0 || caution.id_placeholder || caution.id}
+                  key={caution.xnum_0 || idx}
                   onClick={() => handleRowClick(caution)}
+                  style={{ cursor: "pointer" }}
                 >
                   <td>{caution.xnum_0}</td>
-                  <td>
-                    {caution.facility
-                      ? caution.facility.fcynam_0
-                      : caution.xsite_0 || "N/A"}
-                  </td>
-                  <td>
-                    {caution.customer
-                      ? `${caution.customer.BPCNUM_0}`
-                      : caution.xclient_0 || "error"}
-                  </td>
+                  <td>{caution.facility ? caution.facility.fcynam_0 : caution.xsite_0 || "N/A"}</td>
+                  <td>{caution.customer ? caution.customer.BPCNUM_0 : caution.xclient_0 || "N/A"}</td>
                   <td>{caution.xraison_0 || "N/A"}</td>
                   <td>{caution.xcin_0 || "N/A"}</td>
-                  <td>
-                    {caution.xdate_0
-                      ? new Date(caution.xdate_0).toLocaleDateString("fr-FR")
-                      : "N/A"}
-                  </td>
+                  <td>{caution.xdate_0 ? new Date(caution.xdate_0).toLocaleDateString("fr-FR") : "N/A"}</td>
                   <td style={{ textAlign: "right" }}>
                     {caution.montant != null
                       ? parseFloat(caution.montant).toLocaleString("fr-FR", {
@@ -127,8 +136,32 @@ const CautionTable = ({
           </tbody>
         </table>
       </div>
-    </div>
-  );
-};
 
-export default CautionTable;
+      {cautions.last_page > 1 && (
+        <div className="pagination-controls mt-3 d-flex justify-content-center align-items-center gap-3">
+          <button
+            className="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill shadow-sm"
+            disabled={cautions.current_page === 1}
+            onClick={() => setCurrentPage(cautions.current_page - 1)}
+          >
+            ◀ Précédent
+          </button>
+
+          <span className="fw-bold text-primary">
+            Page <span className="text-dark">{cautions.current_page}</span> / {cautions.last_page}
+          </span>
+
+          <button
+            className="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill shadow-sm"
+            disabled={cautions.current_page === cautions.last_page}
+            onClick={() => setCurrentPage(cautions.current_page + 1)}
+          >
+            Suivant ▶
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default CautionTable

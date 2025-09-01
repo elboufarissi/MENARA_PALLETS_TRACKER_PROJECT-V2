@@ -62,10 +62,8 @@ class ConsignationController extends Controller
         // Tri
         $query->orderBy('xdate_0', 'desc')->orderBy('xnum_0', 'desc');
 
-        // Pagination
-        $consignations = $request->has('per_page')
-            ? $query->paginate($request->per_page)
-            : $query->get();
+        // ✅ Pagination forcée à 5
+        $consignations = $query->paginate(5);
 
         // Récupérer la collection si pagination
         $items = $consignations instanceof \Illuminate\Pagination\AbstractPaginator
@@ -107,7 +105,6 @@ class ConsignationController extends Controller
         if ($consignations instanceof \Illuminate\Pagination\AbstractPaginator) {
             $consignations->setCollection($items);
         }
-
         return response()->json($consignations);
 
     } catch (\Exception $e) {

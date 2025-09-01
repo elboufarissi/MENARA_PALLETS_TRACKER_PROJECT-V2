@@ -16,11 +16,13 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 class RestitutionController extends Controller
 {
     public function index()
-    {
-        // Order by creation date descending for "Derniers lus"
-        $restitutions = Restitution::orderBy('created_at', 'desc')->get();
-        return response()->json($restitutions);
-    }    public function store(Request $request)
+{
+    // Order by creation date descending et paginer par 5
+    $restitutions = Restitution::orderBy('created_at', 'desc')->paginate(5);
+
+    return response()->json($restitutions);
+}
+    public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'xsite_0'     => 'required|string|max:255',
@@ -101,7 +103,7 @@ class RestitutionController extends Controller
 
         // Check if this is a validation request (updating xvalsta_0 to 2)
         $isValidationRequest = $request->has('xvalsta_0') && $request->xvalsta_0 == 2;
-        
+
         Log::info("Restitution update request received", [
             'xnum_0' => $xnum_0,
             'request_data' => $request->all(),
@@ -146,11 +148,11 @@ class RestitutionController extends Controller
                 'montant' => $restitution->montant,
                 'xvalsta_0' => $restitution->xvalsta_0
             ];
-            
+
             $restitution->xcin_0 = $request->xcin_0;
             $restitution->montant = $request->montant;
             $restitution->xvalsta_0 = $request->xvalsta_0;
-            
+
             Log::info("Saving restitution with updated values", [
                 'xnum_0' => $restitution->xnum_0,
                 'old_values' => $oldValues,
@@ -160,9 +162,9 @@ class RestitutionController extends Controller
                     'xvalsta_0' => $restitution->xvalsta_0
                 ]
             ]);
-            
+
             $saved = $restitution->save();
-            
+
             Log::info("Restitution save result", [
                 'xnum_0' => $restitution->xnum_0,
                 'save_successful' => $saved,
@@ -178,9 +180,9 @@ class RestitutionController extends Controller
                         'restitution_amount' => $restitution->montant,
                         'xnum_0' => $restitution->xnum_0
                     ]);
-                    
+
                     $newBalance = \App\Models\Csolde::recalculateBalance($restitution->xclient_0, $restitution->xsite_0);
-                    
+
                     Log::info("Balance recalculation completed successfully", [
                         'client' => $restitution->xclient_0,
                         'site' => $restitution->xsite_0,
@@ -584,11 +586,11 @@ if ($montant > $currentBalance) {
             ->where('xvalsta_0', 2) // Only get validated cautions
             ->orderByDesc('created_at')
             ->first();
-        
+
         if (!$caution) {
             return response()->json(['message' => 'Aucune caution validée trouvée pour ce client.'], 404);
         }
-        
+
         return response()->json(['xcin_0' => $caution->xcin_0]);
     }
 }

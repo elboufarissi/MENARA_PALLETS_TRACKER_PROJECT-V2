@@ -1,22 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./CautionTable.css";
 import { FaFilter, FaRegCalendarAlt } from "react-icons/fa";
 
 const DeconsignationTable = ({
-  deconsignations = [],
   onRowClick,
   onFilterIconClick,
   onDateFilterIconClick,
 }) => {
-  if (!deconsignations) {
-    deconsignations = [];
-  }
-
-  const handleRowClick = (deconsignation) => {
-    if (onRowClick) {
-      onRowClick(deconsignation);
-    }
-  };
+  const [deconsignations, setDeconsignations] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const columns = [
     { key: "xnum_0", label: "Numéro" },
@@ -24,9 +17,32 @@ const DeconsignationTable = ({
     { key: "xclient_0", label: "Client" },
     { key: "xmatricule_0", label: "Matricule" },
     { key: "xdate_0", label: "Date" },
-    { key: "palette_deconsigner", label: "Palettes à déconsigner" },
+    { key: "palette_a_deconsigner", label: "Palettes à déconsigner" },
     { key: "xvalsta_0", label: "Validée" },
   ];
+
+  // 🔹 Charger les données depuis Laravel avec pagination et token
+  useEffect(() => {
+    const token = localStorage.getItem("token"); // ton token stocké au login
+
+    fetch(`http://127.0.0.1:8000/api/deconsignations?page=${currentPage}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setDeconsignations(data.data || []);
+        setTotalPages(data.last_page || 1);
+      })
+      .catch((err) => console.error("Erreur API:", err));
+  }, [currentPage]);
+
+  const handleRowClick = (deconsignation) => {
+    if (onRowClick) onRowClick(deconsignation);
+  };
+
   return (
     <div style={{ padding: 0, margin: 0 }}>
       <h4>Dernières déconsignations</h4>
@@ -49,7 +65,7 @@ const DeconsignationTable = ({
                         onDateFilterIconClick && onDateFilterIconClick(col.key)
                       }
                     >
-                      <FaRegCalendarAlt className="calendar-icon" />
+                      <FaRegCalendarAlt />
                     </button>
                   ) : (
                     <button
@@ -59,7 +75,7 @@ const DeconsignationTable = ({
                         onFilterIconClick && onFilterIconClick(col.key)
                       }
                     >
-                      <FaFilter className="filter-icon" />
+                      <FaFilter />
                     </button>
                   )}
                 </th>
@@ -67,59 +83,77 @@ const DeconsignationTable = ({
             </tr>
           </thead>
           <tbody>
-            {deconsignations.length === 0 && (
+            {deconsignations.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center text-muted">
+                <td colSpan={columns.length} className="text-center">
                   Aucune déconsignation trouvée
                 </td>
               </tr>
-            )}{" "}
-            {deconsignations.map((deconsignation, index) => (
-              <tr
-                key={deconsignation.xnum_0 || index}
-                onClick={() => handleRowClick(deconsignation)}
-                className="data-row clickable-row"
-              >
-                <td>{deconsignation.xnum_0}</td>
-                <td>
-                  {deconsignation.facility
-                    ? deconsignation.facility.fcynam_0
-                    : deconsignation.xsite_0 || "N/A"}
-                </td>
-                <td>
-                  {deconsignation.customer
-                    ? `${deconsignation.customer.bpcnum_0} (${deconsignation.customer.bpcnam_0})`
-                    : deconsignation.xclient_0 || "N/A"}
-                </td>
-                <td>{deconsignation.xcamion_0 || "N/A"}</td>
-                <td>
-                  {deconsignation.xdate_0
-                    ? new Date(deconsignation.xdate_0).toLocaleDateString(
-                        "fr-FR"
-                      )
-                    : "N/A"}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {deconsignation.palette_a_deconsigner != null
-                    ? deconsignation.palette_a_deconsigner
-                    : "N/A"}
-                </td>
-                <td>
-                  {deconsignation.xvalsta_0 === 2 ||
-                  deconsignation.xvalsta_0 === "2" ? (
-                    <span className="badge bg-success">Oui</span>
-                  ) : deconsignation.xvalsta_0 === 1 ||
-                    deconsignation.xvalsta_0 === "1" ? (
-                    <span className="badge bg-warning">Non</span>
-                  ) : (
-                    <span className="badge bg-secondary">N/A</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            ) : (
+              deconsignations.map((deconsignation) => (
+                <tr
+                  key={deconsignation.xnum_0}
+                  onClick={() => handleRowClick(deconsignation)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <td>{deconsignation.xnum_0}</td>
+                  <td>{deconsignation.xsite_0 || "N/A"}</td>
+                  <td>{deconsignation.xclient_0 || "N/A"}</td>
+                  <td>{deconsignation.xmatricule_0 || "N/A"}</td>
+                  <td>
+                    {deconsignation.xdate_0
+                      ? new Date(deconsignation.xdate_0).toLocaleDateString("fr-FR")
+                      : ""}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {deconsignation.palette_a_deconsigner ?? "N/A"}
+                  </td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        deconsignation.xvalsta_0 === "2" ||
+                        deconsignation.xvalsta_0 === 2
+                          ? "bg-success"
+                          : "bg-warning"
+                      }`}
+                    >
+                      {deconsignation.xvalsta_0 === "2" ||
+                      deconsignation.xvalsta_0 === 2
+                        ? "Oui"
+                        : "Non"}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* 🔹 Pagination controls */}
+      {totalPages > 1 && (
+        <div className="pagination-controls mt-3 d-flex justify-content-center align-items-center gap-3">
+          <button
+            className="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill shadow-sm"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            ◀ Précédent
+          </button>
+
+          <span className="fw-bold text-primary">
+            Page <span className="text-dark">{currentPage}</span> / {totalPages}
+          </span>
+
+          <button
+            className="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill shadow-sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Suivant ▶
+          </button>
+        </div>
+      )}
     </div>
   );
 };

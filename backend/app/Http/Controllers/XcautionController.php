@@ -18,13 +18,21 @@ class XcautionController extends Controller
 
   public function index()
 {
-    $cautions = Xcaution::orderBy('created_at', 'desc')
-                         ->with('customer') 
-                         ->limit(100)
-                         ->get();
+    try {
+        // Récupérer les cautions avec le client associé
+        $cautions = Xcaution::with('customer')
+            ->orderBy('created_at', 'desc')
+            ->paginate(5); //Pagination 5 par page
 
-    return response()->json($cautions, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        return response()->json($cautions, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Erreur lors de la récupération des cautions',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
 }
+
 
 
 
