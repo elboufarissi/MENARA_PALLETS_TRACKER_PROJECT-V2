@@ -94,18 +94,34 @@ return [
     ],
 ],
 
-'sqlsrv_erp' => [
+'sqlsrv1' => [
     'driver' => 'sqlsrv',
-    'host' => env('SQLSRV_SECOND_HOST', 'localhost'),
-    'port' => env('SQLSRV_SECOND_PORT', '1433'),
-    'database' => env('SQLSRV_SECOND_DATABASE', 'forge'),
-    'username' => env('SQLSRV_SECOND_USERNAME', 'forge'),
-    'password' => env('SQLSRV_SECOND_PASSWORD', ''),
+    'host' => env('SQLSRV1_HOST', 'localhost'),
+    'port' => env('SQLSRV1_PORT', '1433'),
+    'database' => env('SQLSRV1_DATABASE', 'forge'),
+    'username' => env('SQLSRV1_USERNAME', 'forge'),
+    'password' => env('SQLSRV1_PASSWORD', ''),
     'charset' => 'utf8',
     'prefix' => '',
     'prefix_indexes' => true,
     'options' => [
-        'Encrypt' => env('SQLSRV_ENCRYPT', false) ? true : false,
+        'Encrypt' => env('SQLSRV1_ENCRYPTION', false) ? true : false,
+        'TrustServerCertificate' => true,
+    ],
+],
+
+'sqlsrv_erp' => [
+    'driver' => 'sqlsrv',
+    'host' => env('SQLSRV_HOST', 'localhost'),
+    'port' => env('SQLSRV_PORT', '1433'),
+    'database' => env('SQLSRV_DATABASE', 'forge'),
+    'username' => env('SQLSRV_USERNAME', 'forge'),
+    'password' => env('SQLSRV_PASSWORD', ''),
+    'charset' => 'utf8',
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'options' => [
+        'Encrypt' => env('SQLSRV_ENCRYPTION', false) ? true : false,
         'TrustServerCertificate' => true,
     ],
 ],

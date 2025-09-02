@@ -11,8 +11,8 @@ import api from "../utils/api";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
-import { useMemo } from "react"; // you already import React, but ensure useMemo is available
-import LoadingOverlay from "../components/LoadingOverlay";
+import { useMemo } from "react";
+import LoadingSpinner from "./LoadingSpinner";
 
 // Dynamic schema based on mode: create, view (read-only), or edit, and user role
 const createValidationSchema = (isEditMode, isReadOnly, userRole) => {
@@ -235,7 +235,7 @@ const DECONSIGNForm = forwardRef(
     // State for solde information (setters used even if state not read)
     const [, setCurrentSolde] = useState(null);
     const [, setIsLoadingSolde] = useState(false);
-    const [isLoading] = useState(false);
+    const [isClientLoading, setIsClientLoading] = useState(false);
     // Map client code -> raison/name for quick lookups
     const clientsByCode = useMemo(() => {
       const map = {};
@@ -449,6 +449,15 @@ const DECONSIGNForm = forwardRef(
         setIsLoadingSolde(false);
       }
     }, [watchedClient, watchedSite, initialData]);
+
+    // Cleanup effect for client timeout
+    useEffect(() => {
+      return () => {
+        if (window.clientTimeout) {
+          clearTimeout(window.clientTimeout);
+        }
+      };
+    }, []);
 
     // Helper function to check if form can be saved
     const canSaveForm = () => {
@@ -1045,23 +1054,32 @@ const DECONSIGNForm = forwardRef(
                     setClientHasBeenTouched(true);
                     setValue("xclient_0", v, { shouldValidate: true });
 
-                    if (!isEditMode && !isReadOnly) {
-                      if (v === "") {
-                        clearErrors("xclient_0"); // let Yup handle "required" on submit
-                      } else {
-                        const ok = !!clientsByCode[v];
-                        if (ok) clearErrors("xclient_0");
-                        else
-                          setError("xclient_0", {
-                            type: "manual",
-                            message: "Client introuvable",
-                          });
+                    // Add loading state when client is being validated
+                    if (window.clientTimeout)
+                      clearTimeout(window.clientTimeout);
+                    setIsClientLoading(true);
+
+                    window.clientTimeout = setTimeout(() => {
+                      if (!isEditMode && !isReadOnly) {
+                        if (v === "") {
+                          clearErrors("xclient_0"); // let Yup handle "required" on submit
+                        } else {
+                          const ok = !!clientsByCode[v];
+                          if (ok) clearErrors("xclient_0");
+                          else
+                            setError("xclient_0", {
+                              type: "manual",
+                              message: "Client introuvable",
+                            });
+                        }
                       }
-                    }
+                      setIsClientLoading(false);
+                    }, 1000);
                   }}
                   onBlur={() => {
                     setFocusField("");
                     setClientHasBeenTouched(true);
+                    setIsClientLoading(false); // Reset loading state on blur
                     const v = (getValues("xclient_0") || "")
                       .trim()
                       .toUpperCase();
@@ -1412,7 +1430,7 @@ const DECONSIGNForm = forwardRef(
           </div>{" "}
           <br></br>
         </div>
-        <LoadingOverlay show={isLoading} text="Chargement en cours..." />
+        <LoadingSpinner show={isClientLoading} text="Chargement en cours..." />
       </form>
     );
   }

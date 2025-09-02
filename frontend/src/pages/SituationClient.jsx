@@ -7,8 +7,7 @@ import DetailsClientOperations from "../components/DetailsClientOperations";
 import "../components/SituationClient.css";
 import "../components/CautionTable.css";
 import { useAuth } from "../context/AuthContext";
-import LoadingOverlay from "../components/LoadingOverlay";
-
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function SituationClient() {
   const { user } = useAuth();
@@ -33,26 +32,20 @@ export default function SituationClient() {
 
   const [isClientValid, setIsClientValid] = useState(true);
   const [clientTouched, setClientTouched] = useState(false);
-   const [isLoading, setIsLoading] = useState(false); 
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Memoize options to prevent infinite re-renders
-  const clientOptionsFormatted = useMemo(() => {
-    return clientOptions.map((c) => ({
-      id: c.id?.toString() || "",
-      code: c.client_code || "",
-      name: c.client_name || "",
-    }));
+  // Fast lookup: CLIENT_CODE (uppercased) -> { id, code, name }
+  const clientsByCode = useMemo(() => {
+    const map = {};
+    for (const c of clientOptions) {
+      const code = String(c.client_code || "")
+        .trim()
+        .toUpperCase();
+      const name = c.client_name || c.raison_sociale || "";
+      if (code) map[code] = { code, name };
+    }
+    return map;
   }, [clientOptions]);
-   // Fast lookup: CLIENT_CODE (uppercased) -> { id, code, name }
-const clientsByCode = useMemo(() => {
-  const map = {};
-  for (const c of clientOptions) {
-    const code = String(c.client_code || "").trim().toUpperCase();
-    const name = c.client_name || c.raison_sociale || "";
-    if (code) map[code] = { code, name };
-  }
-  return map;
-}, [clientOptions]);
 
   const siteOptionsFormatted = useMemo(() => {
     return siteOptions.map((s) => ({
@@ -85,58 +78,57 @@ const clientsByCode = useMemo(() => {
   }, []);
 
   const handleFetchSituation = async () => {
-  if (!client || !site) {
-    alert("Veuillez remplir les champs Client et Site.");
-    return;
-  }
-  if (!isClientKnown) {
-    setClientTouched(true);
-    setIsClientValid(false);
-    alert("Client introuvable. Veuillez saisir un code client valide.");
-    return;
-  }
-  try {
-    const response = await api.get("/flux-interne/situation-client", {
-      params: { client: client.trim().toUpperCase(), site },
-    });
-    const data = response.data;
-    if (data.raison) setRaison(data.raison);
-    setResultat({
-      cautionPalettes: data.cautionPalettes || 0,
-      palettesConsignees: data.palettesConsignees || 0,
-      cautionDh: data.cautionDh || 0,
-      palettesDeconsignees: data.palettesDeconsignees || 0,
-      sumrestitutions: data.sumrestitutions || 0,
-      soldePalettes: Math.floor(data.soldePalettes || 0),
-      soldeDh: data.soldeDh || 0,
-    });
-    setOperations(data.operations || []);
-    setShowDetails(true);
-    setError(null);
-  } catch (err) {
-    setError(
-      `Erreur lors de la récupération de la situation client: ${
-        err.response?.data?.message || err.message
-      }`
-    );
-  }
-};
+    if (!client || !site) {
+      alert("Veuillez remplir les champs Client et Site.");
+      return;
+    }
+    if (!isClientKnown) {
+      setClientTouched(true);
+      setIsClientValid(false);
+      alert("Client introuvable. Veuillez saisir un code client valide.");
+      return;
+    }
+    try {
+      const response = await api.get("/flux-interne/situation-client", {
+        params: { client: client.trim().toUpperCase(), site },
+      });
+      const data = response.data;
+      if (data.raison) setRaison(data.raison);
+      setResultat({
+        cautionPalettes: data.cautionPalettes || 0,
+        palettesConsignees: data.palettesConsignees || 0,
+        cautionDh: data.cautionDh || 0,
+        palettesDeconsignees: data.palettesDeconsignees || 0,
+        sumrestitutions: data.sumrestitutions || 0,
+        soldePalettes: Math.floor(data.soldePalettes || 0),
+        soldeDh: data.soldeDh || 0,
+      });
+      setOperations(data.operations || []);
+      setShowDetails(true);
+      setError(null);
+    } catch (err) {
+      setError(
+        `Erreur lors de la récupération de la situation client: ${
+          err.response?.data?.message || err.message
+        }`
+      );
+    }
+  };
 
   const isClientKnown = useMemo(() => {
-  const code = (client || "").trim().toUpperCase();
-  return !!clientsByCode[code];
-}, [client, clientsByCode]);
-
+    const code = (client || "").trim().toUpperCase();
+    return !!clientsByCode[code];
+  }, [client, clientsByCode]);
 
   return (
-    <div style={{overflowY: 'auto', maxHeight: '100vh'}}>
+    <div style={{ overflowY: "auto", maxHeight: "100vh" }}>
       <CautionHeader user={user} />
       <div className="situation-container">
         <div className="situation-main">
           <NavigationMenu />
 
           <div className="card">
-            <LoadingOverlay show={isLoading} text="Chargement en cours..." />
+            <LoadingSpinner show={isLoading} text="Chargement en cours..." />
             <h3>Critères</h3>
             <div className="form-row">
               <label>
@@ -154,58 +146,67 @@ const clientsByCode = useMemo(() => {
               </div>
             </div>
             <div className="form-row">
-  <label>
-    Client <span className="required">*</span>
-  </label>
+              <label>
+                Client <span className="required">*</span>
+              </label>
 
-  <div className="input-wrapper">
-    <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-      <input
-        value={client}
-        onChange={(e) => {
-          const value = (e?.target?.value ?? "")
-            .toString()
-            .toUpperCase()
-            .trim();
+              <div className="input-wrapper">
+                <div
+                  style={{ display: "flex", flexDirection: "column", flex: 1 }}
+                >
+                  <input
+                    value={client}
+                    onChange={(e) => {
+                      const value = (e?.target?.value ?? "")
+                        .toString()
+                        .toUpperCase()
+                        .trim();
 
-          setClient(value);
+                      setClient(value);
 
-          // Raison auto
-          const hit = clientsByCode[value];
-          setRaison(hit ? hit.name : "");
+                      // Raison auto
+                      const hit = clientsByCode[value];
+                      setRaison(hit ? hit.name : "");
 
-          // Reset valid pendant la saisie
-          setIsClientValid(true);
+                      // Reset valid pendant la saisie
+                      setIsClientValid(true);
 
-          // Validation différée (1s)
-          if (window.clientTimeout) clearTimeout(window.clientTimeout);
-          setIsLoading(true); // active blur
+                      // Validation différée (1s)
+                      if (window.clientTimeout)
+                        clearTimeout(window.clientTimeout);
+                      setIsLoading(true); // active blur
 
-          window.clientTimeout = setTimeout(() => {
-            const code = (value || "").trim().toUpperCase();
-            setClientTouched(true);
-            setIsClientValid(code === "" ? true : !!clientsByCode[code]);
-            setIsLoading(false); // désactive blur
-          }, 1000);
-        }}
-        onBlur={() => {
-          setClientTouched(true);
-          const code = (client || "").trim().toUpperCase();
-          setIsClientValid(code === "" ? true : !!clientsByCode[code]);
-        }}
-        autoComplete="off"
-        className={`input ${
-          clientTouched && !isClientValid ? "sage-input-error" : ""
-        }`}
-        placeholder="Ex: CGP78810"
-      />
+                      window.clientTimeout = setTimeout(() => {
+                        const code = (value || "").trim().toUpperCase();
+                        setClientTouched(true);
+                        setIsClientValid(
+                          code === "" ? true : !!clientsByCode[code]
+                        );
+                        setIsLoading(false); // désactive blur
+                      }, 1000);
+                    }}
+                    onBlur={() => {
+                      setClientTouched(true);
+                      const code = (client || "").trim().toUpperCase();
+                      setIsClientValid(
+                        code === "" ? true : !!clientsByCode[code]
+                      );
+                    }}
+                    autoComplete="off"
+                    className={`input ${
+                      clientTouched && !isClientValid ? "sage-input-error" : ""
+                    }`}
+                    placeholder="Ex: CGP78810"
+                  />
 
-      {clientTouched && !isClientValid && (
-        <span className="sage-input-error-text">Client introuvable</span>
-      )}
-    </div>
-  </div>
-</div>
+                  {clientTouched && !isClientValid && (
+                    <span className="sage-input-error-text">
+                      Client introuvable
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div className="form-row">
               <label>Raison sociale</label>
@@ -213,8 +214,6 @@ const clientsByCode = useMemo(() => {
                 <input value={raison} readOnly className="readonly" />
               </div>
             </div>
-
-            
 
             <div className="form-row">
               <button onClick={handleFetchSituation}>OK</button>
