@@ -25,24 +25,31 @@ export default function DetailsClientOperations({ operations }) {
   };
 
   // Fonction pour naviguer vers la page détail
- const handleConsult = (op) => {
+ 
+const handleConsult = (op) => {
   if (!op || !op.code || !op.type) return;
 
   const code = op.code;
   const type = op.type.toLowerCase();
+  let url = "";
 
   if (type === "déconsignation") {
-    navigate(`/flux-interne/deconsignation/${code}`);
+    url = `/flux-interne/deconsignation/${code}`;
   } else if (type === "consignation") {
-    navigate(`/flux-interne/consignation/${code}`);
+    url = `/flux-interne/consignation/${code}`;
   } else if (type === "caution") {
-    navigate(`/depot-de-caution/${code}`);
+    url = `/depot-de-caution/${code}`;
   } else if (type === "restitution") {
-  navigate(`/recuperation/${code}`); 
-  }else {
+    url = `/recuperation/${code}`;
+  } else {
     console.warn("Type d'opération non reconnu :", type);
+    return;
   }
+
+  // ouvre dans un nouvel onglet
+  window.open(url, "_blank");
 };
+
 const handleEtatClick = (op) => {
   if (!op || !op.code || !op.type || op.statut !== 2) {
     alert("Impossible d'ouvrir l'état. Vérifie que l'opération est validée.");

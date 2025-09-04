@@ -168,14 +168,13 @@ class XcautionController extends Controller
   public function previewPDF($xnum_0)
 {
     try {
-        // Récupérer la caution
+        // 🔹 Récupérer la caution courante
         $caution = Xcaution::where('xnum_0', $xnum_0)->firstOrFail();
 
         $client = $caution->xclient_0;
         $site = $caution->xsite_0;
-        $targetCreatedAt = $caution->created_at;
 
-        // Récupérer toutes les opérations validées pour ce client/site
+        // 🔹 Récupérer toutes les opérations validées (client + site)
         $operations = collect()
             ->merge(Xcaution::where('xclient_0', $client)
                 ->where('xsite_0', $site)
@@ -215,15 +214,11 @@ class XcautionController extends Controller
                     'montant' => $op->montant,
                 ]));
 
-        // Trier toutes les opérations
+        // 🔹 Trier par date
         $sortedOps = $operations->sortBy('created_at')->values();
 
-        // Initialisation
-        $cumulCaution = 0;
-        $cumulConsignees = 0;
-        $cumulDeconsignees = 0;
-        $cumulRestitution = 0;
-
+        // 🔹 Initialisation des cumuls
+        $cumulCaution = $cumulConsignees = $cumulDeconsignees = $cumulRestitution = 0;
         $cautionBefore = 0;
         $cautionAfter = 0;
 
@@ -232,7 +227,7 @@ class XcautionController extends Controller
 
             if ($isCurrent) {
                 $cautionBefore = $cumulCaution - $cumulConsignees + $cumulDeconsignees - $cumulRestitution;
-                continue; // ne pas inclure la caution courante dans les cumuls
+                continue; // on saute la caution courante
             }
 
             if ($op->type === 'Caution') {
@@ -246,20 +241,26 @@ class XcautionController extends Controller
             }
         }
 
-        // Ajouter la caution actuelle si validée
+        // 🔹 Après la caution actuelle
         if ($caution->xvalsta_0 == 2) {
             $cautionAfter = $cautionBefore + ($caution->montant ?? 0);
         } else {
             $cautionAfter = $cautionBefore;
         }
 
-        // Charger la vue
-        $pdf = PDF::loadView('pdf.bon-caution', [
+        // ✅ Préparer le HTML de la vue et forcer UTF-8
+        $html = view('pdf.bon-caution', [
             'caution' => $caution,
             'caution_before' => round($cautionBefore / 100, 2),
             'caution_after' => round($cautionAfter / 100, 2),
-        ]);
+        ])->render();
 
+        // 🔹 Nettoyer les caractères invalides
+        $html = mb_convert_encoding($html, 'UTF-8', 'UTF-8');
+        $html = iconv('UTF-8', 'UTF-8//IGNORE', $html);
+
+        // Générer le PDF
+        $pdf = PDF::loadHTML($html);
         $pdf->setPaper('a4', 'portrait');
         $pdf->setOption('enable-local-file-access', true);
         $pdf->setOption('isRemoteEnabled', true);
@@ -267,12 +268,14 @@ class XcautionController extends Controller
         return $pdf->stream();
     } catch (\Exception $e) {
         Log::error('PDF Preview Error: ' . $e->getMessage());
+
         return response()->json([
             'message' => 'Erreur lors de la prévisualisation du PDF',
-            'error' => $e->getMessage()
+            'error' => $e->getMessage(),
         ], 500);
     }
 }
+
 
     public function savePdfData(Request $request)
     {

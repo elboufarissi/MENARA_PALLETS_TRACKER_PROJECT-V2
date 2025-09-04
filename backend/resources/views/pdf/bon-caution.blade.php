@@ -1,174 +1,187 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Bon de Caution</title>
-    <style>
-        @font-face {
-            font-family: 'DAX-Light';
-            src: url('{{ storage_path('fonts/DAX-Light.ttf') }}') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
+  <meta charset="UTF-8">
+  <title>Bon de Caution</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      margin: 30px;
+      color: #000;
+    }
 
-        @font-face {
-            font-family: 'DAX-Medium';
-            src: url('{{ storage_path('fonts/DAX-Medium.ttf') }}') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
+    .header-table {
+      width: 100%;
+      margin-bottom: 10px;
+    }
 
-        body {
-            font-family: 'DAX-Light', sans-serif;
-        }
+    .logo {
+      width: 130px;
+    }
 
-        .dax-medium {
-            font-family: 'DAX-Medium', sans-serif;
-            font-weight: bold;
-            color: #222;
-        }
+    .title-box {
+      background-color: #1a2c50;
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 18px;
+      margin-top: 10px;
+    }
 
-        .bold-label, .type-table th {
-            font-family: 'DAX-Medium', sans-serif !important;
-            font-weight: bold !important;
-            color: #222 !important;
-            font-size: 1.1em !important;
-        }
+    .main-table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
 
-        .grey-value {
-            color: #666;
-            font-family: 'DAX-Light', sans-serif;
-        }
+    .main-table td {
+      vertical-align: top;
+    }
 
-        .bon-title {
-            font-family: 'DAX-Medium', sans-serif;
-            font-weight: 900;
-            font-size: 2.7em;
-            color: #222;
-            letter-spacing: 1px;
-        }
+    .label {
+      font-weight: bold;
+    }
 
-        .total-box {
-            font-family: 'DAX-Medium', sans-serif;
-            font-weight: bold;
-            color: #222;
-            min-width: 350px;
-            max-width: 100%;
-            display: inline-block;
-            white-space: nowrap;
-        }
+    .italic {
+      font-style: italic;
+    }
 
-        .signature-label {
-            font-family: 'DAX-Medium', sans-serif;
-            font-weight: bold;
-            color: #222;
-        }
-    </style>
-    <link href="{{ public_path('css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ public_path('css/bon-caution.css') }}" rel="stylesheet">
+    .small {
+      font-size: 15px;
+    }
+
+    .align-right {
+      text-align: right;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .signature-cell {
+      height: 65px;
+      border: 1px solid #ccc;
+    }
+
+    .field-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .field-table td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+
+    .signature-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+    }
+
+    .signature-table td {
+      border: 1px solid #ccc;
+      text-align: center;
+      height: 65px;
+      font-size: 14px;
+    }
+
+    .value-centered {
+      text-align: center;
+    }
+
+    hr.separator {
+      margin: 50px 0;
+      border: 1px dashed #999;
+    }
+  </style>
 </head>
 <body>
-    @for($i = 0; $i < 2; $i++)
-    <div class="receipt-block">
-        <table width="100%">
-            <tr>
-                <td width="40%" style="vertical-align: top;">
-                    <img src="{{ public_path('logo.png') }}" alt="Logo" class="logo">
-                </td>                <td width="60%" style="vertical-align: top;">
-                    <div class="date-time">{{ now()->addHour()->format('d/m/Y H:i:s') }}</div>
-                    <div class="bon-title">BON DE CAUTION</div>
-                </td>
-            </tr>
-        </table>
 
-        <hr class="divider">        <div class="info-row">
-            <span style="display: inline-block; width: 45%;">
-                <span class="info-label bold-label">Date :</span>
-                <span class="info-value grey-value">
-                    @if($caution->xdate_0)
-                        {{ \Carbon\Carbon::parse($caution->xdate_0)->format('d/m/Y') }} {{ $caution->xheure_0 ?? now()->format('H:i:s') }}
-                    @else
-                        {{ now()->format('d/m/Y H:i:s') }}
-                    @endif
-                </span>
-            </span>
-            <span style="display: inline-block; width: 45%;">
-                <span class="info-label bold-label">Client :</span>
-                <span class="info-value grey-value">{{ $caution->xclient_0 }} - {{ $caution->xraison_0 }}</span>
-            </span>
-        </div>
-
-        <div class="info-row">
-            <span style="display: inline-block; width: 45%;">
-                <span class="info-label bold-label">Num :</span>
-                <span class="info-value grey-value">{{ $caution->xnum_0 }}</span>
-            </span>
-            <span style="display: inline-block; width: 45%;">
-                <span class="info-label bold-label">CIN :</span>
-                <span class="info-value grey-value">{{ $caution->xcin_0 }}</span>
-            </span>
-        </div>
-
-        <table class="type-table">
-            <tr>
-                <th width="200" class="bold-label">Type</th>
-                <th class="bold-label">Montant</th>
-            </tr>
-            <tr>
-                <td colspan="2"><hr style="margin: 2px 0; border: none; border-top: 0.5px solid #000;"></td>
-            </tr>
-            <tr>
-                <td style="font-size:1.2em; font-family: 'DAX-Medium', sans-serif; font-weight: normal; color: #222;">caution</td>
-                <td class="grey-value">{{ number_format($caution->montant, 0, ',', ' ') }} DH</td>
-            </tr>
-        </table>
-<table width="100%" style="margin-top: 30px;">
+@for ($i = 0; $i < 2; $i++)
+  <!-- Header -->
+  <table class="header-table">
     <tr>
-        <td style="width: 50%; vertical-align: top;">
-            <div class="bold-label">Solde client :</div>
-            <div style="margin-left: 10px;">
-                <span class="grey-value" style="font-style: italic;">Avant ce bon :</span>
-                <span class="grey-value" style="font-style: italic;">{{number_format($caution_before * 100, 0, ',', ' ') }} DH</span><br>
-                <span class="grey-value" style="font-style: italic;">Après ce bon :</span>
-                <span class="grey-value" style="font-style: italic;">{{number_format($caution_after * 100, 0, ',', ' ') }} DH</span>
-            </div>
-        </td>
-        <td style="width: 50%; vertical-align: top;">
-            <div class="bold-label">Solde palette :</div>
-            <div style="margin-left: 10px;">
-                <span class="grey-value" style="font-style: italic;">Avant ce bon :</span>
-                <span class="grey-value" style="font-style: italic;">{{ $caution_before }} pal</span><br>
-                <span class="grey-value" style="font-style: italic;">Après ce bon :</span>
-                <span class="grey-value" style="font-style: italic;">{{ $caution_after }} pal</span>
-            </div>
-        </td>
+      <td><img src="{{ public_path('logo.png') }}" class="logo"></td>
+      <td class="align-right small">{{ now()->format('d/m/Y H:i:s') }}</td>
     </tr>
-</table>
+  </table>
 
-        <table width="100%" class="total-section">
-            <tr>
-                <td width="40%" style="vertical-align: top;">
-                    <br><br><br>
-                    <div class="total-box">
-                        <span class="bold-label">Total règlement :</span> <span class="grey-value">{{ number_format($caution->montant, 0, ',', ' ') }} DH</span>
-                    </div>
-                </td>
-                <td width="5%"></td>
-                <td width="27%" style="vertical-align: bottom;">
-                    <div class="signature-label bold-label">Client :</div>
-                    <div class="signature-box"></div>
-                </td>
-                <td width="28%" style="vertical-align: bottom;">
-                    <div class="signature-label bold-label">Opérateur :</div>
-                    <div class="signature-box"></div>
-                </td>
-            </tr>
+  <!-- Title -->
+  <div class="title-box">
+    Bon de caution <br>
+    N° <span class="value-centered">{{ $caution->xnum_0 }}</span>
+  </div>
+
+  <!-- Main Info Table -->
+  <table class="main-table">
+    <tr>
+      <!-- Colonne gauche -->
+      <td style="width: 50%; padding-right: 10px;">
+        <table class="field-table">
+          <tr>
+            <td>
+              <span class="label">Date :</span>
+              <span class="italic">{{ \Carbon\Carbon::parse($caution->xdate_0)->format('d/m/Y') }}</span>
+              &nbsp;&nbsp;&nbsp;
+              <span class="label">Heure :</span>
+              <span class="italic">{{ $caution->xheure_0 ?? now()->format('H:i:s') }}</span>
+            </td>
+          </tr>
         </table>
-        <br><br><br>
-        @if($i == 0)
-        <hr class="section-divider">
-        @endif
-    </div>
-    @endfor
+
+        <table class="field-table"><tr><td><span class="label">Client :</span> <span class="value-centered">{{ $caution->xclient_0 }} - {{ $caution->xraison_0 }}</span></td></tr></table>
+        <table class="field-table"><tr><td><span class="label">CIN :</span> <span class="value-centered">{{ $caution->xcin_0 }}</span></td></tr></table>
+        <table class="field-table"><tr><td><span class="label">Caution :</span> <span class="value-centered">{{ number_format($caution->montant, 0, ',', ' ') }} DH</span></td></tr></table>
+
+        <table class="signature-table">
+          <tr>
+            <td class="label">SIGN + CACHET CLIENT</td>
+
+          </tr>
+        </table>
+      </td>
+
+      <!-- Colonne droite -->
+      <td style="width: 50%; padding-left: 10px;">
+        <table class="field-table">
+          <tr>
+            <td>
+              <span class="label">Solde client :</span><br>
+              <span class="italic">Avant ce bon :</span> {{ number_format($caution_before * 100, 0, ',', ' ') }} DH<br>
+              <span class="italic">Après ce bon :</span> {{ number_format($caution_after * 100, 0, ',', ' ') }} DH
+            </td>
+          </tr>
+        </table>
+
+        <table class="field-table">
+          <tr>
+            <td>
+              <span class="label">Solde palettes :</span><br>
+              <span class="italic">Avant ce bon :</span> {{ $caution_before }} pal<br>
+              <span class="italic">Après ce bon :</span> {{ $caution_after }} pal
+            </td>
+          </tr>
+        </table>
+
+        <table class="signature-table" style="margin-top: 10px;">
+          <tr>
+            <td class="label">SIGN + CACHET CAISSIER</td>
+
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  @if($i === 0)
+    <hr class="separator">
+  @endif
+@endfor
+
 </body>
 </html>
