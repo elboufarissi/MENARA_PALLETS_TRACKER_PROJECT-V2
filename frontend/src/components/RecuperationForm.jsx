@@ -4,7 +4,6 @@ import React, {
   useMemo,
   forwardRef,
   useImperativeHandle,
-
 } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -13,7 +12,7 @@ import api from "../utils/api";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
-import LoadingOverlay from "../components/LoadingOverlay";
+import LoadingSpinner from "./LoadingSpinner";
 // Dynamic schema based on mode: create, view (read-only), or edit
 const createValidationSchema = (isEditMode, isReadOnly) => {
   if (isReadOnly) {
@@ -76,9 +75,7 @@ const createValidationSchema = (isEditMode, isReadOnly) => {
   } else {
     // Create mode: validate all required fields
     baseSchema.xsite_0 = yup.string().required("Site obligatoire");
-    baseSchema.xclient_0 = yup
-   .string()
-   .required("Client obligatoire");
+    baseSchema.xclient_0 = yup.string().required("Client obligatoire");
     baseSchema.xraison_0 = yup.string().nullable();
     baseSchema.xcin_0 = yup
       .string()
@@ -110,7 +107,7 @@ const RecuperationForm = forwardRef(
       getValues,
       setValue,
       watch,
-      setError, 
+      setError,
       clearErrors,
       formState: { errors },
     } = useForm({
@@ -125,7 +122,7 @@ const RecuperationForm = forwardRef(
         montant: "",
       },
     });
-   const watchedClient = watch("xclient_0");
+    const watchedClient = watch("xclient_0");
     // State for date and time
     const [currentDate, setCurrentDate] = useState("");
     const [currentTime, setCurrentTime] = useState("");
@@ -142,23 +139,26 @@ const RecuperationForm = forwardRef(
 
     //Quick map: client_code -> client object
     const clientsByCode = useMemo(
-  () =>
-    Object.fromEntries(
-      (clients || []).map((c) => [
-        String(c.client_code || "").trim().toUpperCase(),
-        c,
-      ])
-    ),
-  [clients]
-);
+      () =>
+        Object.fromEntries(
+          (clients || []).map((c) => [
+            String(c.client_code || "")
+              .trim()
+              .toUpperCase(),
+            c,
+          ])
+        ),
+      [clients]
+    );
 
-useEffect(() => {
-  const code = String(watchedClient || "").trim().toUpperCase();
-  const c = clientsByCode[code];
-  const auto =
-    c ? (c.raison_sociale || c.client_name || "") : "";
-  setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
-}, [watchedClient, clientsByCode, setValue]);
+    useEffect(() => {
+      const code = String(watchedClient || "")
+        .trim()
+        .toUpperCase();
+      const c = clientsByCode[code];
+      const auto = c ? c.raison_sociale || c.client_name || "" : "";
+      setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
+    }, [watchedClient, clientsByCode, setValue]);
 
     // State for validation - track if all required fields have valid values
     const [isSiteValid, setIsSiteValid] = useState(true);
@@ -168,7 +168,7 @@ useEffect(() => {
 
     // Track if user has interacted with fields (to show errors only after interaction)
     const [siteHasBeenTouched, setSiteHasBeenTouched] = useState(false);
-    const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
+    const [, setClientHasBeenTouched] = useState(false);
     const [cinHasBeenTouched, setCinHasBeenTouched] = useState(false);
     const [montantHasBeenTouched, setMontantHasBeenTouched] = useState(false);
     const [isFormLoading, setIsFormLoading] = useState(false);
@@ -233,20 +233,24 @@ useEffect(() => {
         );
       }
     }, [initialData, reset]); // Remove sites and clients dependencies
-// Optional: fetch CIN automatically when a valid client is typed
-useEffect(() => {
-  const code = String(watchedClient || "").trim().toUpperCase();
-  if (!initialData && code && clientsByCode[code]) {
-    api
-      .get(`/recuperation/cin-by-client/${code}`)
-      .then((res) => {
-        setValue("xcin_0", res.data?.xcin_0 || "", { shouldValidate: true });
-      })
-      .catch(() => {
-        setValue("xcin_0", "", { shouldValidate: true });
-      });
-  }
-}, [watchedClient, clientsByCode, initialData, setValue]);
+    // Optional: fetch CIN automatically when a valid client is typed
+    useEffect(() => {
+      const code = String(watchedClient || "")
+        .trim()
+        .toUpperCase();
+      if (!initialData && code && clientsByCode[code]) {
+        api
+          .get(`/recuperation/cin-by-client/${code}`)
+          .then((res) => {
+            setValue("xcin_0", res.data?.xcin_0 || "", {
+              shouldValidate: true,
+            });
+          })
+          .catch(() => {
+            setValue("xcin_0", "", { shouldValidate: true });
+          });
+      }
+    }, [watchedClient, clientsByCode, initialData, setValue]);
 
     // Separate useEffect to handle form reset after dropdown data is loaded
     useEffect(() => {
@@ -486,7 +490,7 @@ useEffect(() => {
         }
 
         if (onSuccess) onSuccess();
-        
+
         // Reset form after successful save to prevent duplicate submissions
         if (!isEditMode) {
           reset({
@@ -641,7 +645,7 @@ useEffect(() => {
           .dispatchEvent(
             new Event("submit", { cancelable: true, bubbles: true })
           );
-      }
+      },
     }));
 
     return (
@@ -695,18 +699,14 @@ useEffect(() => {
         className={`sage-form ${
           isEditMode ? "edit-mode" : isReadOnly ? "view-mode" : "create-mode"
         }`}
-        
         style={{
           position: "relative",
           height: "100%",
           display: "flex",
           flexDirection: "column",
         }}
-        
       >
-       
-
-  <LoadingOverlay show={isFormLoading} text="Chargement..." />
+        <LoadingSpinner show={isFormLoading} text="Chargement en cours..." />
         <div className="sage-form-header">
           <div className="sage-form-header-left">
             <FaArrowLeft className="sage-nav-arrow" />
@@ -730,7 +730,6 @@ useEffect(() => {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-
             <button
               type="button"
               className="sage-validation-btn"
@@ -751,7 +750,7 @@ useEffect(() => {
               disabled={currentValidationStatus === "2"}
             >
               Validation
-              </button>
+            </button>
             <FaSignOutAlt className="caution-header-icon" />
           </div>
         </div>
@@ -876,86 +875,88 @@ useEffect(() => {
                 noResultsText="Site introuvable"
               />
             </div>{" "}
-           <div className="sage-row">
-  <label>
-    Client <span className="sage-required">*</span>
-  </label>
-
-  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-    <input
-      type="text"
-      {...register("xclient_0")}
-      value={getValues("xclient_0")}
-      onChange={(e) => {
-        const v = e.target.value.trim().toUpperCase();
-        setClientHasBeenTouched(true);
-        setValue("xclient_0", v, { shouldValidate: false });
-
-        if (!isEditMode && !isReadOnly) {
-          if (window.clientTimeout) clearTimeout(window.clientTimeout);
-          setIsFormLoading(true); // active blur
-          window.clientTimeout = setTimeout(() => {
-            const finalValue = (getValues("xclient_0") || "")
-              .trim()
-              .toUpperCase();
-            if (finalValue && !clientsByCode[finalValue]) {
-              setError("xclient_0", {
-                type: "manual",
-                message: "Client introuvable",
-              });
-            } else {
-              clearErrors("xclient_0");
-            }
-            setIsFormLoading(false); // désactive blur
-          }, 1000); // délai de 1s après avoir fini de taper
-        }
-      }}
-      onBlur={() => {
-        setFocusField("");
-        setClientHasBeenTouched(true);
-        const v = (getValues("xclient_0") || "").trim().toUpperCase();
-        if (!isEditMode && !isReadOnly && v !== "") {
-          const ok = !!clientsByCode[v];
-          if (ok) clearErrors("xclient_0");
-          else
-            setError("xclient_0", {
-              type: "manual",
-              message: "Client introuvable",
-            });
-        }
-      }}
-      onFocus={() => setFocusField("xclient_0")}
-      autoComplete="off"
-      disabled={isReadOnly || isEditMode}
-      className={
-        getInputClass("xclient_0") +
-        (errors.xclient_0 ? " sage-input-error" : "")
-      }
-    />
-
-    {errors.xclient_0 && (
-      <span className="client-autocomplete-no-results">
-        {errors.xclient_0.message}
-      </span>
-    )}
-  </div>
-</div>
-
-
             <div className="sage-row">
-  <label>Raison sociale</label>
-  {/* Visible, read-only value auto-filled from effect */}
-  <input
-    type="text"
-    readOnly
-    value={getValues("xraison_0") || ""}
-    className={getInputClass("xraison_0") + " read-only"}
-    tabIndex={-1}
-  />
-  {/* Hidden to keep the value in RHF state */}
-  <input type="hidden" {...register("xraison_0")} />
-</div>
+              <label>
+                Client <span className="sage-required">*</span>
+              </label>
 
+              <div
+                style={{ display: "flex", flexDirection: "column", flex: 1 }}
+              >
+                <input
+                  type="text"
+                  {...register("xclient_0")}
+                  value={getValues("xclient_0")}
+                  onChange={(e) => {
+                    const v = e.target.value.trim().toUpperCase();
+                    setClientHasBeenTouched(true);
+                    setValue("xclient_0", v, { shouldValidate: false });
+
+                    if (!isEditMode && !isReadOnly) {
+                      if (window.clientTimeout)
+                        clearTimeout(window.clientTimeout);
+                      setIsFormLoading(true); // active blur
+                      window.clientTimeout = setTimeout(() => {
+                        const finalValue = (getValues("xclient_0") || "")
+                          .trim()
+                          .toUpperCase();
+                        if (finalValue && !clientsByCode[finalValue]) {
+                          setError("xclient_0", {
+                            type: "manual",
+                            message: "Client introuvable",
+                          });
+                        } else {
+                          clearErrors("xclient_0");
+                        }
+                        setIsFormLoading(false); // désactive blur
+                      }, 1000); // délai de 1s après avoir fini de taper
+                    }
+                  }}
+                  onBlur={() => {
+                    setFocusField("");
+                    setClientHasBeenTouched(true);
+                    const v = (getValues("xclient_0") || "")
+                      .trim()
+                      .toUpperCase();
+                    if (!isEditMode && !isReadOnly && v !== "") {
+                      const ok = !!clientsByCode[v];
+                      if (ok) clearErrors("xclient_0");
+                      else
+                        setError("xclient_0", {
+                          type: "manual",
+                          message: "Client introuvable",
+                        });
+                    }
+                  }}
+                  onFocus={() => setFocusField("xclient_0")}
+                  autoComplete="off"
+                  disabled={isReadOnly || isEditMode}
+                  className={
+                    getInputClass("xclient_0") +
+                    (errors.xclient_0 ? " sage-input-error" : "")
+                  }
+                />
+
+                {errors.xclient_0 && (
+                  <span className="client-autocomplete-no-results">
+                    {errors.xclient_0.message}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="sage-row">
+              <label>Raison sociale</label>
+              {/* Visible, read-only value auto-filled from effect */}
+              <input
+                type="text"
+                readOnly
+                value={getValues("xraison_0") || ""}
+                className={getInputClass("xraison_0") + " read-only"}
+                tabIndex={-1}
+              />
+              {/* Hidden to keep the value in RHF state */}
+              <input type="hidden" {...register("xraison_0")} />
+            </div>
             <div className="sage-row">
               <label>
                 CIN <span className="sage-required">*</span>
@@ -1098,8 +1099,9 @@ useEffect(() => {
               />
             </div>
           </div>
-        </div><br></br>  
-      </form> 
+        </div>
+        <br></br>
+      </form>
     );
   }
 );

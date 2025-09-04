@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::connection('sqlsrv')->dropIfExists('csolde');
+        Schema::dropIfExists('csolde');
     }
 };

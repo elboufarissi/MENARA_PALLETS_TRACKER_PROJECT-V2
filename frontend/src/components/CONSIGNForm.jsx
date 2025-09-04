@@ -13,8 +13,7 @@ import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
 import api from "../utils/api";
-import LoadingOverlay from "../components/LoadingOverlay";
-
+import LoadingSpinner from "./LoadingSpinner";
 
 // Dynamic schema based on mode: create, view (read-only), or edit
 const createValidationSchema = (isEditMode, isReadOnly) => {
@@ -116,7 +115,7 @@ const CONSIGNForm = forwardRef(
       getValues,
       watch,
       setValue,
-      setError, 
+      setError,
       clearErrors,
       formState: { errors },
     } = useForm({
@@ -160,7 +159,7 @@ const CONSIGNForm = forwardRef(
     const [isSiteValid, setIsSiteValid] = useState(true);
     const [isClientValid, setIsClientValid] = useState(true);
     const [isBpValid, setIsBpValid] = useState(true);
-    const [isCamionValid, setIsCamionValid] = useState(true);
+    const [, setIsCamionValid] = useState(true);
     const [isPaletteRameneValid, setIsPaletteRameneValid] = useState(true);
     const [isPaletteAConsignerValid, setIsPaletteAConsignerValid] =
       useState(true);
@@ -168,9 +167,9 @@ const CONSIGNForm = forwardRef(
 
     // Track if user has interacted with fields (to show errors only after interaction)
     const [siteHasBeenTouched, setSiteHasBeenTouched] = useState(false);
-    const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
+    const [, setClientHasBeenTouched] = useState(false);
     const [bpHasBeenTouched, setBpHasBeenTouched] = useState(false);
-    const [camionHasBeenTouched, setCamionHasBeenTouched] = useState(false);
+    const [, setCamionHasBeenTouched] = useState(false);
     const [paletteRameneHasBeenTouched, setPaletteRameneHasBeenTouched] =
       useState(false);
     const [
@@ -180,54 +179,64 @@ const CONSIGNForm = forwardRef(
     const [matriculeHasBeenTouched, setMatriculeHasBeenTouched] =
       useState(false); // For both Matricule fields
 
-    // State for solde information
-    const [currentSolde, setCurrentSolde] = useState(null);
-    const [isLoadingSolde, setIsLoadingSolde] = useState(false);
-const watchedClient = watch("xclient_0");
-const watchedSite   = watch("xsite_0");
-// Quick map: client_code -> client object
-const clientsByCode = useMemo(
-  () =>
-    Object.fromEntries(
-      (clients || []).map((c) => [
-        String(c.client_code || "").trim().toUpperCase(),
-        c,
-      ])
-    ),
-  [clients]
-);
+    // State for solde information (using underscore prefix to indicate intentionally unused)
+    const [, setCurrentSolde] = useState(null);
+    const [, setIsLoadingSolde] = useState(false);
+    const watchedClient = watch("xclient_0");
+    const watchedSite = watch("xsite_0");
+    // Quick map: client_code -> client object
+    const clientsByCode = useMemo(
+      () =>
+        Object.fromEntries(
+          (clients || []).map((c) => [
+            String(c.client_code || "")
+              .trim()
+              .toUpperCase(),
+            c,
+          ])
+        ),
+      [clients]
+    );
 
-const watchedClientCode = watch("xclient_0");
-const [isLoading, setIsLoading] = useState(false);
+    const watchedClientCode = watch("xclient_0");
+    const [isLoading, setIsLoading] = useState(false);
 
-// Keep raison sociale auto from client code
-useEffect(() => {
-  const code = String(watchedClientCode || "").trim().toUpperCase();
-  const c = clientsByCode[code];
-  const auto = c ? (c.raison_sociale || c.client_name || "") : "";
+    // Keep raison sociale auto from client code
+    useEffect(() => {
+      const code = String(watchedClientCode || "")
+        .trim()
+        .toUpperCase();
+      const c = clientsByCode[code];
+      const auto = c ? c.raison_sociale || c.client_name || "" : "";
 
-  if (auto) {
-    const current = getValues("xraison_0") || "";
-    if (current !== auto) {
-      setValue("xraison_0", auto, { shouldValidate: false, shouldDirty: true });
-    }
-  }
-}, [watchedClientCode, clientsByCode, setValue, getValues]);
-
+      if (auto) {
+        const current = getValues("xraison_0") || "";
+        if (current !== auto) {
+          setValue("xraison_0", auto, {
+            shouldValidate: false,
+            shouldDirty: true,
+          });
+        }
+      }
+    }, [watchedClientCode, clientsByCode, setValue, getValues]);
 
     // Process deliveries for dropdown
     const deliveryOptions = useMemo(() => {
-  const g = (o,k) => o?.[k.toLowerCase()] ?? o?.[k.toUpperCase()] ?? "";
-  const seen = new Set();
-  return (deliveries ?? [])
-    .map(d => {
-      const code = g(d, "sdhnum_0");
-      const name = g(d, "bpinam_0");
-      const site = g(d, "stofcy_0");
-      return { id: String(code || ""), code: code || "", name: `${code} • ${name} • ${site}` };
-    })
-    .filter(opt => opt.code && !seen.has(opt.code) && seen.add(opt.code));
-}, [deliveries]);
+      const g = (o, k) => o?.[k.toLowerCase()] ?? o?.[k.toUpperCase()] ?? "";
+      const seen = new Set();
+      return (deliveries ?? [])
+        .map((d) => {
+          const code = g(d, "sdhnum_0");
+          const name = g(d, "bpinam_0");
+          const site = g(d, "stofcy_0");
+          return {
+            id: String(code || ""),
+            code: code || "",
+            name: `${code} • ${name} • ${site}`,
+          };
+        })
+        .filter((opt) => opt.code && !seen.has(opt.code) && seen.add(opt.code));
+    }, [deliveries]);
 
     useEffect(() => {
       if (initialData) {
@@ -267,7 +276,8 @@ useEffect(() => {
           xnum_0: initialData.xnum_0 || "",
           xsite_0: initialData.xsite_0 || "",
           xclient_0: initialData.xclient_0 || "",
-          xraison_0: initialData.xraison_0 || initialData.customer?.raison_sociale || "",
+          xraison_0:
+            initialData.xraison_0 || initialData.customer?.raison_sociale || "",
           xbp_0: initialData.xbp_0 || "",
           xcamion_0: initialData.xcamion_0 || "",
           xvalsta_0: initialData.xvalsta_0?.toString() || "2",
@@ -325,31 +335,31 @@ useEffect(() => {
     }, [initialData, reset]); // Add sites and clients as dependencies
 
     useEffect(() => {
-  if (
-    initialData &&
-    !isLoadingDropdowns &&
-    (sites?.length ?? 0) > 0 &&
-    (clients?.length ?? 0) > 0
-  ) {
-    // Re-apply values so AutocompleteInput sees proper options
-    reset({
-      xnum_0: initialData.xnum_0 || "",
-      xsite_0: initialData.xsite_0 || "",
-      xclient_0: initialData.xclient_0 || "",
-      xraison_0:
-        getValues("xraison_0") ||
-        initialData.xraison_0 ||
-        initialData.customer?.raison_sociale ||
-        "",
-      xbp_0: initialData.xbp_0 || "",
-      xcamion_0: initialData.xcamion_0 || "",
-      xvalsta_0: initialData.xvalsta_0?.toString() || "2",
-      palette_ramene: getValues("palette_ramene") || "",
-      palette_a_consigner: getValues("palette_a_consigner") || "",
-      palette_consignees: getValues("palette_consignees") || "",
-    });
-  }
-}, [initialData, isLoadingDropdowns, sites, clients, reset, getValues]);
+      if (
+        initialData &&
+        !isLoadingDropdowns &&
+        (sites?.length ?? 0) > 0 &&
+        (clients?.length ?? 0) > 0
+      ) {
+        // Re-apply values so AutocompleteInput sees proper options
+        reset({
+          xnum_0: initialData.xnum_0 || "",
+          xsite_0: initialData.xsite_0 || "",
+          xclient_0: initialData.xclient_0 || "",
+          xraison_0:
+            getValues("xraison_0") ||
+            initialData.xraison_0 ||
+            initialData.customer?.raison_sociale ||
+            "",
+          xbp_0: initialData.xbp_0 || "",
+          xcamion_0: initialData.xcamion_0 || "",
+          xvalsta_0: initialData.xvalsta_0?.toString() || "2",
+          palette_ramene: getValues("palette_ramene") || "",
+          palette_a_consigner: getValues("palette_a_consigner") || "",
+          palette_consignees: getValues("palette_consignees") || "",
+        });
+      }
+    }, [initialData, isLoadingDropdowns, sites, clients, reset, getValues]);
 
     // Fetch dropdown data for sites and clients
     useEffect(() => {
@@ -377,37 +387,39 @@ useEffect(() => {
       fetchDropdownData();
     }, []);
 
-    
     // Fetch deliveries for Bon de prélèvement dropdown
-    
-// fetch when BOTH are present
-useEffect(() => {
-  const fetchDeliveries = async () => {
-    try {
-      if (!watchedClient || !watchedSite) {
-        setDeliveries([]);
-        // Only clear xbp_0 if not in edit or read-only mode
-        if (!isEditMode && !(initialData && !isEditMode)) {
-          setValue("xbp_0", "");
-        }
-        return;
-      }
-      const res = await axios.get("http://localhost:8000/api/delivery-documents", {
-        params: { client: watchedClient, site: watchedSite },
-      });
-      setDeliveries(res.data?.success ? (res.data.data ?? []) : []);
-      // Only clear xbp_0 if not in edit or read-only mode
-      if (!isEditMode && !(initialData && !isEditMode)) {
-        setValue("xbp_0", "");
-      }
-    } catch (e) {
-      console.error("Error fetching deliveries:", e);
-      setDeliveries([]);
-    }
-  };
 
-  fetchDeliveries();
-}, [watchedClient, watchedSite, setValue, isEditMode, initialData]);
+    // fetch when BOTH are present
+    useEffect(() => {
+      const fetchDeliveries = async () => {
+        try {
+          if (!watchedClient || !watchedSite) {
+            setDeliveries([]);
+            // Only clear xbp_0 if not in edit or read-only mode
+            if (!isEditMode && !(initialData && !isEditMode)) {
+              setValue("xbp_0", "");
+            }
+            return;
+          }
+          const res = await axios.get(
+            "http://localhost:8000/api/delivery-documents",
+            {
+              params: { client: watchedClient, site: watchedSite },
+            }
+          );
+          setDeliveries(res.data?.success ? res.data.data ?? [] : []);
+          // Only clear xbp_0 if not in edit or read-only mode
+          if (!isEditMode && !(initialData && !isEditMode)) {
+            setValue("xbp_0", "");
+          }
+        } catch (e) {
+          console.error("Error fetching deliveries:", e);
+          setDeliveries([]);
+        }
+      };
+
+      fetchDeliveries();
+    }, [watchedClient, watchedSite, setValue, isEditMode, initialData]);
 
     // Fetch trucks for XCAMION_0 dropdown
     useEffect(() => {
@@ -458,7 +470,6 @@ useEffect(() => {
     };
 
     // Watch for changes in client and site to fetch solde
-   
 
     useEffect(() => {
       fetchSolde(watchedClient, watchedSite);
@@ -683,9 +694,9 @@ useEffect(() => {
         if (initialData && initialData.xnum_0) {
           // EDIT MODE: send PUT to update
           await api.put(
-   `/consignations/${encodeURIComponent(initialData.xnum_0)}`, 
-   submissionData 
- );
+            `/consignations/${encodeURIComponent(initialData.xnum_0)}`,
+            submissionData
+          );
           alert("Consignation modifiée avec succès!");
         } else {
           // CREATE MODE: send POST to create (send xdate_0 and xheure_0)
@@ -700,7 +711,7 @@ useEffect(() => {
         }
 
         if (onSuccess) onSuccess();
-        
+
         // Reset form after successful save to prevent duplicate submissions
         if (!isEditMode) {
           reset({
@@ -847,7 +858,10 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
 
         console.log("Sending validation data:", validationData); // Debug log
 
-        await api.put(`/consignations/${encodeURIComponent(initialData.xnum_0)}`, validationData);
+        await api.put(
+          `/consignations/${encodeURIComponent(initialData.xnum_0)}`,
+          validationData
+        );
 
         console.log("Validation API call successful"); // Debug log
 
@@ -889,7 +903,7 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
           .dispatchEvent(
             new Event("submit", { cancelable: true, bubbles: true })
           );
-      }
+      },
     }));
 
     // Helper function to handle integer input (remove non-digits)
@@ -948,7 +962,6 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-
               <button
                 type="button"
                 className="sage-validation-btn"
@@ -1098,71 +1111,73 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
                   noResultsText="Site introuvable"
                 />
               </div>{" "}
-            <div className="sage-row">
-  <label>
-    Client <span className="sage-required">*</span>
-  </label>
-  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-    <input
-      type="text"
-      {...register("xclient_0")}
-      value={getValues("xclient_0")}
-      onChange={(e) => {
-        const v = e.target.value.trim().toUpperCase();
-        setValue("xclient_0", v, { shouldValidate: false });
-
-        if (window.clientTimeout) clearTimeout(window.clientTimeout);
-
-        // 🚀 Active le loader pendant la recherche
-        setIsLoading(true);
-
-        window.clientTimeout = setTimeout(() => {
-          const finalValue = (getValues("xclient_0") || "").trim().toUpperCase();
-          if (finalValue && !clientsByCode[finalValue]) {
-            setError("xclient_0", {
-              type: "manual",
-              message: "Client introuvable",
-            });
-          } else {
-            clearErrors("xclient_0");
-          }
-          // ✅ Désactive le loader une fois terminé
-          setIsLoading(false);
-        }, 1000);
-      }}
-      autoComplete="off"
-      disabled={!!initialData}
-      className={
-        getInputClass("xclient_0") +
-        (errors.xclient_0 ? " sage-input-error" : "")
-      }
-    />
-
-    {errors.xclient_0 && (
-      <span className="client-autocomplete-no-results">
-        {errors.xclient_0.message}
-      </span>
-    )}
-  </div>
-</div>
-
-
               <div className="sage-row">
-  <label>Raison sociale</label>
+                <label>
+                  Client <span className="sage-required">*</span>
+                </label>
+                <div
+                  style={{ display: "flex", flexDirection: "column", flex: 1 }}
+                >
+                  <input
+                    type="text"
+                    {...register("xclient_0")}
+                    value={getValues("xclient_0")}
+                    onChange={(e) => {
+                      const v = e.target.value.trim().toUpperCase();
+                      setValue("xclient_0", v, { shouldValidate: false });
 
-  {/* Visible, read-only value (auto-filled by the effect) */}
-  <input
-    type="text"
-    readOnly
-    value={watch("xraison_0") || ""}
-    className={getInputClass("xraison_0") + " read-only"}
-    tabIndex={-1}
-  />
+                      if (window.clientTimeout)
+                        clearTimeout(window.clientTimeout);
 
-  {/* Hidden to keep the value in RHF form state */}
-  <input type="hidden" {...register("xraison_0")} />
-</div>
+                      // 🚀 Active le loader pendant la recherche
+                      setIsLoading(true);
 
+                      window.clientTimeout = setTimeout(() => {
+                        const finalValue = (getValues("xclient_0") || "")
+                          .trim()
+                          .toUpperCase();
+                        if (finalValue && !clientsByCode[finalValue]) {
+                          setError("xclient_0", {
+                            type: "manual",
+                            message: "Client introuvable",
+                          });
+                        } else {
+                          clearErrors("xclient_0");
+                        }
+                        // ✅ Désactive le loader une fois terminé
+                        setIsLoading(false);
+                      }, 1000);
+                    }}
+                    autoComplete="off"
+                    disabled={!!initialData}
+                    className={
+                      getInputClass("xclient_0") +
+                      (errors.xclient_0 ? " sage-input-error" : "")
+                    }
+                  />
+
+                  {errors.xclient_0 && (
+                    <span className="client-autocomplete-no-results">
+                      {errors.xclient_0.message}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="sage-row">
+                <label>Raison sociale</label>
+
+                {/* Visible, read-only value (auto-filled by the effect) */}
+                <input
+                  type="text"
+                  readOnly
+                  value={watch("xraison_0") || ""}
+                  className={getInputClass("xraison_0") + " read-only"}
+                  tabIndex={-1}
+                />
+
+                {/* Hidden to keep the value in RHF form state */}
+                <input type="hidden" {...register("xraison_0")} />
+              </div>
               <div className="sage-row">
                 <label>
                   Bon de prélèvement <span className="sage-required">*</span>
@@ -1561,10 +1576,11 @@ Vous devez ajouter ${missingAmount} DH au solde pour effectuer cette consignatio
                 />
               </div>
             </div>
-          </div> <br></br>  
+          </div>{" "}
+          <br></br>
         </form>
         {/* 🔥 overlay on top of the form */}
-    <LoadingOverlay show={isLoading} text="Chargement en cours..." />
+        <LoadingSpinner show={isLoading} text="Chargement en cours..." />
       </div>
     );
   }

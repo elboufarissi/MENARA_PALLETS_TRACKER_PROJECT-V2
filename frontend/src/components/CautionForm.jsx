@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -6,7 +12,7 @@ import api from "../utils/api";
 import { FaArrowLeft, FaArrowRight, FaSignOutAlt } from "react-icons/fa";
 import AutocompleteInput from "./AutocompleteInput";
 import "./CautionForm.css";
-import LoadingOverlay from "../components/LoadingOverlay";
+import LoadingSpinner from "./LoadingSpinner";
 // Dynamic schema based on mode: create, view (read-only), or edit
 const createValidationSchema = (isEditMode, isReadOnly) => {
   if (isReadOnly) {
@@ -97,23 +103,26 @@ const createValidationSchema = (isEditMode, isReadOnly) => {
 
 // MODIFIED: Accept onSuccess, initialData, and isEditMode as props
 const DepotCautionForm = forwardRef(
-  ({ onSuccess, initialData, isEditMode = false }, ref) => {
+  (
+    { onSuccess, initialData, isEditMode = false, shouldLoadDropdowns = false },
+    ref
+  ) => {
     const isReadOnly = initialData && !isEditMode; // Read-only when viewing existing data but not editing
 
     const {
-  register,
-  handleSubmit,
-  reset,
-  getValues,
-  setValue,
-  watch,
-  setError,
-  clearErrors,
-  formState: { errors },
-} = useForm({
+      register,
+      handleSubmit,
+      reset,
+      getValues,
+      setValue,
+      watch,
+      setError,
+      clearErrors,
+      formState: { errors },
+    } = useForm({
       resolver: yupResolver(createValidationSchema(isEditMode, isReadOnly)),
-      mode: "onBlur",        // 👈 validation seulement au blur
-  reValidateMode: "onBlur", // 👈 revalidation seulement au blur
+      mode: "onBlur", // 👈 validation seulement au blur
+      reValidateMode: "onBlur", // 👈 revalidation seulement au blur
       defaultValues: {
         xvalsta_0: "1", // Default to 1 (Non)
         xnum_0: "",
@@ -147,13 +156,12 @@ const DepotCautionForm = forwardRef(
 
     // Track if user has interacted with fields (to show errors only after interaction)
     const [siteHasBeenTouched, setSiteHasBeenTouched] = useState(false);
-    const [clientHasBeenTouched, setClientHasBeenTouched] = useState(false);
+    const [, setClientHasBeenTouched] = useState(false);
     const [cinHasBeenTouched, setCinHasBeenTouched] = useState(false);
     const [montantHasBeenTouched, setMontantHasBeenTouched] = useState(false);
     const clientsReady = !isLoadingDropdowns && clients.length > 0;
     const [isClientLoading, setIsClientLoading] = useState(false); //  état pour le blur
 
-    
     useEffect(() => {
       if (initialData) {
         // Update validation status
@@ -250,99 +258,113 @@ const DepotCautionForm = forwardRef(
       reset,
       currentValidationStatus,
     ]);
-// Quick map: client_code -> client object
-const clientsByCode = useMemo(
-  () =>
-    Object.fromEntries(
-      (clients || []).map((c) => [
-        String(c.client_code || "").trim().toUpperCase(),
-        c,
-      ])
-    ),
-  [clients]
-);
-useEffect(() => {
-  if (!initialData) return;
-  const pre = initialData.xraison_0 || "";
-  if (pre) {
-    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
-  }
-}, [initialData, setValue]);
-useEffect(() => {
-  if (!initialData) return;
-  const pre = initialData.xraison_0 || "";
-  if (pre) {
-    setValue("xraison_0", pre, { shouldValidate: false, shouldDirty: true });
-  }
-}, [initialData, setValue]);
+    // Quick map: client_code -> client object
+    const clientsByCode = useMemo(
+      () =>
+        Object.fromEntries(
+          (clients || []).map((c) => [
+            String(c.client_code || "")
+              .trim()
+              .toUpperCase(),
+            c,
+          ])
+        ),
+      [clients]
+    );
+    useEffect(() => {
+      if (!initialData) return;
+      const pre = initialData.xraison_0 || "";
+      if (pre) {
+        setValue("xraison_0", pre, {
+          shouldValidate: false,
+          shouldDirty: true,
+        });
+      }
+    }, [initialData, setValue]);
+    useEffect(() => {
+      if (!initialData) return;
+      const pre = initialData.xraison_0 || "";
+      if (pre) {
+        setValue("xraison_0", pre, {
+          shouldValidate: false,
+          shouldDirty: true,
+        });
+      }
+    }, [initialData, setValue]);
 
-// Watch the typed client code
-const watchedClientCode = watch("xclient_0");
+    // Watch the typed client code
+    const watchedClientCode = watch("xclient_0");
 
-// Keep raison sociale & CIN auto in sync with client code
-// Keep raison sociale & CIN auto in sync with client code
-// Keep raison sociale & CIN auto in sync with client code
-useEffect(() => {
-  const code = String(watchedClientCode || "").trim().toUpperCase();
-  const client = clientsByCode[code];
+    // Keep raison sociale & CIN auto in sync with client code
+    // Keep raison sociale & CIN auto in sync with client code
+    // Keep raison sociale & CIN auto in sync with client code
+    useEffect(() => {
+      const code = String(watchedClientCode || "")
+        .trim()
+        .toUpperCase();
+      const client = clientsByCode[code];
 
-  // --- Raison sociale sync ---
-  const autoRaison = client ? (client.raison_sociale || client.client_name || "") : "";
-  if (autoRaison) {
-    const current = (getValues("xraison_0") || "").trim();
-    if (current !== autoRaison) {
-      setValue("xraison_0", autoRaison, {
-        shouldValidate: false,
-        shouldDirty: true,
-      });
-    }
-  }
+      // --- Raison sociale sync ---
+      const autoRaison = client
+        ? client.raison_sociale || client.client_name || ""
+        : "";
+      if (autoRaison) {
+        const current = (getValues("xraison_0") || "").trim();
+        if (current !== autoRaison) {
+          setValue("xraison_0", autoRaison, {
+            shouldValidate: false,
+            shouldDirty: true,
+          });
+        }
+      }
 
-  // --- Client validation ---
-  if (code === "") {
-    clearErrors("xclient_0");
-  } else if (!client) {
-    if (clientsReady) {
-      setError("xclient_0", {
-        type: "manual",
-        message: "Client introuvable",
-      });
-    } else {
-      clearErrors("xclient_0"); // suppress flicker while loading
-    }
-  } else {
-    clearErrors("xclient_0");
-  }
+      // --- Client validation ---
+      if (code === "") {
+        clearErrors("xclient_0");
+      } else if (!client) {
+        if (clientsReady) {
+          setError("xclient_0", {
+            type: "manual",
+            message: "Client introuvable",
+          });
+        } else {
+          clearErrors("xclient_0"); // suppress flicker while loading
+        }
+      } else {
+        clearErrors("xclient_0");
+      }
 
-  // --- CIN hydration ---
-  if (client) {
-    api
-      .get(`/xcaution/cin-by-client/${code}`)
-      .then((res) => {
-        const cin = (res.data?.xcin_0 || "").toUpperCase();
-        setValue("xcin_0", cin, { shouldValidate: false });
-      })
-      .catch(() => {
-        setValue("xcin_0", "", { shouldValidate: true });
-      });
-  } else if (clientsReady) {
-    // only clear when we definitively know it's not a client
-    setValue("xcin_0", "", { shouldValidate: false });
-  }
-}, [
-  watchedClientCode,
-  clientsByCode,
-  clientsReady,
-  setValue,
-  getValues,
-  setError,
-  clearErrors,
-]);
-
-
+      // --- CIN hydration ---
+      if (client) {
+        api
+          .get(`/xcaution/cin-by-client/${code}`)
+          .then((res) => {
+            const cin = (res.data?.xcin_0 || "").toUpperCase();
+            setValue("xcin_0", cin, { shouldValidate: false });
+          })
+          .catch(() => {
+            setValue("xcin_0", "", { shouldValidate: true });
+          });
+      } else if (clientsReady) {
+        // only clear when we definitively know it's not a client
+        setValue("xcin_0", "", { shouldValidate: false });
+      }
+    }, [
+      watchedClientCode,
+      clientsByCode,
+      clientsReady,
+      setValue,
+      getValues,
+      setError,
+      clearErrors,
+    ]);
 
     // Fetch dropdown data for sites and clients
     useEffect(() => {
+      if (!shouldLoadDropdowns) {
+        return;
+      }
+
       const fetchDropdownData = async () => {
         try {
           const [sitesResponse, clientsResponse] = await Promise.all([
@@ -365,7 +387,7 @@ useEffect(() => {
       };
 
       fetchDropdownData();
-    }, []);
+    }, [shouldLoadDropdowns]);
     // Helper function to validate all required fields
     const validateAllRequiredFields = () => {
       if (isEditMode || isReadOnly) {
@@ -646,27 +668,6 @@ useEffect(() => {
         className += " sage-input-error";
       }
       return className;
-    }; // Handle client selection to auto-populate raison sociale
-    const handleClientSelect = (option) => {
-      console.log("handleClientSelect called with:", option); // Debug log
-      setClientHasBeenTouched(true);
-
-      if (option && !initialData) {
-        // Only auto-populate in create mode
-        // Use the original client data we stored in the option
-        const selectedClient = option.originalClient;
-        console.log("Selected client found:", selectedClient); // Debug log
-        if (selectedClient) {
-          const raisonValue =
-            selectedClient.raison_sociale || selectedClient.client_name || "";
-          console.log("Setting raison sociale to:", raisonValue); // Debug log
-          setValue("xraison_0", raisonValue);
-        }
-      }
-      // Mark client as valid when selected from dropdown
-      if (option && option.code) {
-        setIsClientValid(true);
-      }
     };
 
     // Handle validation button click - specifically for updating XVALSTA from 1 to 2
@@ -771,7 +772,7 @@ useEffect(() => {
           .dispatchEvent(
             new Event("submit", { cancelable: true, bubbles: true })
           );
-      }
+      },
     }));
 
     return (
@@ -827,7 +828,7 @@ useEffect(() => {
         }`}
         style={{ position: "relative" }}
       >
-         <LoadingOverlay show={isClientLoading} text="Chargement en cours..." />
+        <LoadingSpinner show={isClientLoading} text="Chargement en cours..." />
         <div className="sage-form-header">
           <div className="sage-form-header-left">
             <FaArrowLeft className="sage-nav-arrow" />
@@ -849,7 +850,6 @@ useEffect(() => {
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-
             <button
               type="button"
               className="sage-validation-btn"
@@ -995,68 +995,67 @@ useEffect(() => {
                 noResultsText="Site introuvable"
               />
             </div>{" "}
-           
- <div className="sage-row" style={{ position: "relative" }}>
-  <label>
-    Client <span className="sage-required">*</span>
-  </label>
-  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-    <input
-      type="text"
-      {...register("xclient_0")}
-      value={getValues("xclient_0")}
-      onChange={(e) => {
-        const v = e.target.value.trim().toUpperCase();
-        setValue("xclient_0", v, { shouldValidate: false });
+            <div className="sage-row" style={{ position: "relative" }}>
+              <label>
+                Client <span className="sage-required">*</span>
+              </label>
+              <div
+                style={{ display: "flex", flexDirection: "column", flex: 1 }}
+              >
+                <input
+                  type="text"
+                  {...register("xclient_0")}
+                  value={getValues("xclient_0")}
+                  onChange={(e) => {
+                    const v = e.target.value.trim().toUpperCase();
+                    setValue("xclient_0", v, { shouldValidate: false });
 
-        if (window.clientTimeout) clearTimeout(window.clientTimeout);
-        setIsClientLoading(true); // active blur
-        window.clientTimeout = setTimeout(() => {
-          const finalValue = (getValues("xclient_0") || "").trim().toUpperCase();
-          if (finalValue && !clientsByCode[finalValue]) {
-            setError("xclient_0", {
-              type: "manual",
-              message: "Client introuvable",
-            });
-          } else {
-            clearErrors("xclient_0");
-          }
-          setIsClientLoading(false); // désactive blur
-        }, 1000);
-      }}
-      autoComplete="off"
-      disabled={!!initialData}
-      className={
-        getInputClass("xclient_0") +
-        (errors.xclient_0 ? " sage-input-error" : "")
-      }
-    />
+                    if (window.clientTimeout)
+                      clearTimeout(window.clientTimeout);
+                    setIsClientLoading(true); // active blur
+                    window.clientTimeout = setTimeout(() => {
+                      const finalValue = (getValues("xclient_0") || "")
+                        .trim()
+                        .toUpperCase();
+                      if (finalValue && !clientsByCode[finalValue]) {
+                        setError("xclient_0", {
+                          type: "manual",
+                          message: "Client introuvable",
+                        });
+                      } else {
+                        clearErrors("xclient_0");
+                      }
+                      setIsClientLoading(false); // désactive blur
+                    }, 1000);
+                  }}
+                  autoComplete="off"
+                  disabled={!!initialData}
+                  className={
+                    getInputClass("xclient_0") +
+                    (errors.xclient_0 ? " sage-input-error" : "")
+                  }
+                />
 
-    {errors.xclient_0 && (
-      <span className="client-autocomplete-no-results">
-        {errors.xclient_0.message}
-      </span>
-    )}
-  </div>
-</div>
-
-
-
-
+                {errors.xclient_0 && (
+                  <span className="client-autocomplete-no-results">
+                    {errors.xclient_0.message}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="sage-row">
-  <label>Raison sociale</label>
-  {/* Visible, read-only value (auto-filled by the effect) */}
-  <input
-    type="text"
-    readOnly
-    value={watch("xraison_0") || ""}
-    className={getInputClass("xraison_0") + " read-only"}
-    tabIndex={-1}
-  />
-  {/* Hidden to keep it in RHF state */}
-  <input type="hidden" {...register("xraison_0")} />
-</div>
-
+              <label>Raison sociale</label>
+              {/* Visible, read-only value (auto-filled by the effect) */}
+              <input
+                type="text"
+                readOnly
+                value={watch("xraison_0") || ""}
+                className={getInputClass("xraison_0") + " read-only"}
+                tabIndex={-1}
+              />
+              {/* Hidden to keep it in RHF state */}
+              <input type="hidden" {...register("xraison_0")} />
+            </div>
             <div className="sage-row">
               <label>
                 CIN <span className="sage-required">*</span>
@@ -1160,7 +1159,6 @@ useEffect(() => {
         <div className="sage-section">
           <div className="sage-section-title">Lignes</div>
           <div className="sage-fields">
-
             <div className="sage-row">
               <label>
                 Montant <span className="sage-required">*</span>
@@ -1216,12 +1214,11 @@ useEffect(() => {
                 autoComplete="off"
                 disabled={initialData && !isEditMode} // Editable in edit mode
               />
-              <div>
-          
-              </div>
+              <div></div>
             </div>
-       </div> 
-        </div><br></br>  
+          </div>
+        </div>
+        <br></br>
       </form>
     );
   }

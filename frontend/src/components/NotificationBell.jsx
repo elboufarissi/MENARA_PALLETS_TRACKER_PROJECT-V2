@@ -12,8 +12,8 @@ const NotificationBell = ({ userRole }) => {
   useEffect(() => {
     if (userRole) {
       fetchNotifications();
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000);
+      // Poll for new notifications every 2 minutes
+      const interval = setInterval(fetchNotifications, 120000);
       return () => clearInterval(interval);
     }
   }, [userRole]);
